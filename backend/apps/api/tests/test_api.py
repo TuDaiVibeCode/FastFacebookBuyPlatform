@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import pytest
 from fastapi.testclient import TestClient
 
+from app.core.config import Settings
 from app.main import create_app
 
 
@@ -23,7 +25,25 @@ def test_health_reports_ready_services() -> None:
     assert payload["api"] == "ok"
     assert payload["exact_cache"] == "in_memory_redis_compatible"
     assert payload["semantic_cache"] == "post_semantic_cache"
+    assert payload["llm_mode"] == "mock"
     assert payload["sample_data_loaded"] is True
+
+
+def test_real_llm_mode_requires_openai_key() -> None:
+    settings = Settings(use_mock_llm=False, openai_api_key=None)
+
+    with pytest.raises(ValueError, match="OPENAI_API_KEY"):
+        create_app(settings)
+
+
+def test_health_reports_openai_when_real_llm_is_configured() -> None:
+    settings = Settings(use_mock_llm=False, openai_api_key="test-key")
+    client = TestClient(create_app(settings))
+
+    response = client.get("/api/v1/health")
+
+    assert response.status_code == 200
+    assert response.json()["llm_mode"] == "openai"
 
 
 def test_analyze_miss_then_redis_hit_updates_metrics() -> None:

@@ -23,7 +23,7 @@ def build_api_router(pipeline: AnalyzePipeline, settings: Settings) -> APIRouter
             api="ok",
             exact_cache=pipeline.exact_cache.backend_name,
             semantic_cache=pipeline.semantic_cache.collection_name,
-            llm_mode="mock" if settings.use_mock_llm else "real",
+            llm_mode="mock" if settings.use_mock_llm else settings.llm_provider,
             sample_data_loaded=pipeline.pricing.ready(),
             market_price_count=pipeline.pricing.count(),
         )

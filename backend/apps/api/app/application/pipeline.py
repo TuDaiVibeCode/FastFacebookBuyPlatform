@@ -13,7 +13,7 @@ from app.modules.cache import InMemoryExactCache
 from app.modules.deals import DealRepository
 from app.modules.ingestion import IngestionService
 from app.modules.listings import to_listing_boundary
-from app.modules.normalization import MockNormalizer
+from app.modules.normalization import MockNormalizer, OpenAINormalizer
 from app.modules.pricing import PricingService
 from app.modules.semantic_cache import InMemorySemanticCache
 from app.modules.source_policy import SourcePolicyService
@@ -39,7 +39,7 @@ class AnalyzePipeline:
         self.policy = SourcePolicyService(self.events, strict=settings.strict_source_policy)
         self.exact_cache = InMemoryExactCache(ttl_seconds=settings.exact_cache_ttl_seconds)
         self.semantic_cache = InMemorySemanticCache(threshold=settings.semantic_cache_threshold)
-        self.normalizer = MockNormalizer(self.events)
+        self.normalizer = self._build_normalizer(settings)
         self.pricing = PricingService(settings.sample_data_dir)
         self.arbitrage = ArbitrageService(self.events)
         self.deals = DealRepository()
@@ -80,7 +80,7 @@ class AnalyzePipeline:
             trace.append("semantic_miss")
             self.metrics.llm_calls_made += 1
             item = self.normalizer.normalize(ingested.normalized_text, ingested.raw_text_hash)
-            trace.append("mock_llm")
+            trace.append("mock_llm" if self.settings.use_mock_llm else f"{self.settings.llm_provider}_llm")
             cache_source = CacheSource.miss
 
         market_price = self.pricing.get_market_price(item.product_name)
@@ -107,6 +107,19 @@ class AnalyzePipeline:
         self.deals.save(record)
         self.events.publish("ListingStored", listing=to_listing_boundary(record).model_dump(mode="json"))
         return record
+
+    def _build_normalizer(self, settings: Settings) -> MockNormalizer | OpenAINormalizer:
+        if settings.use_mock_llm:
+            return MockNormalizer(self.events)
+        if settings.llm_provider != "openai":
+            raise ValueError(f"unsupported LLM_PROVIDER '{settings.llm_provider}'")
+        return OpenAINormalizer(
+            self.events,
+            api_key=settings.openai_api_key or "",
+            model=settings.openai_model,
+            base_url=settings.openai_base_url,
+            timeout_seconds=settings.openai_timeout_seconds,
+        )
 
     def _persist_from_cached(
         self,

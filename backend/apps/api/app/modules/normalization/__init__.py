@@ -1,4 +1,4 @@
-from app.modules.normalization.service import MockNormalizer
+from app.modules.normalization.service import MockNormalizer, OpenAINormalizer
 
-__all__ = ["MockNormalizer"]
+__all__ = ["MockNormalizer", "OpenAINormalizer"]
 

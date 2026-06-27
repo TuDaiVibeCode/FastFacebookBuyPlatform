@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import json
 import re
+from typing import Any
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 from app.core.events import EventBus
 from app.shared.schemas import NormalizedItem
@@ -103,4 +107,92 @@ class MockNormalizer:
         )
         self._events.publish("PostNormalized", raw_text_hash=raw_text_hash, product_name=item.product_name)
         return item
+
+
+class OpenAINormalizer:
+    def __init__(
+        self,
+        events: EventBus,
+        *,
+        api_key: str,
+        model: str,
+        base_url: str,
+        timeout_seconds: float,
+    ) -> None:
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY is required when USE_MOCK_LLM=false")
+        self._events = events
+        self._api_key = api_key
+        self._model = model
+        self._endpoint = f"{base_url.rstrip('/')}/chat/completions"
+        self._timeout_seconds = timeout_seconds
+
+    def normalize(self, normalized_text: str, raw_text_hash: str) -> NormalizedItem:
+        payload = {
+            "model": self._model,
+            "temperature": 0,
+            "response_format": {"type": "json_object"},
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "Extract one resale listing from noisy Vietnamese or English text. "
+                        "Return only JSON with keys: product_name, brand, model, condition, "
+                        "asking_price, currency, sold_status, location, confidence. "
+                        "Use null when unknown. asking_price must be an integer VND amount when present. "
+                        "confidence must be between 0 and 1."
+                    ),
+                },
+                {"role": "user", "content": normalized_text},
+            ],
+        }
+        data = self._request(payload)
+        content = data["choices"][0]["message"]["content"]
+        item = self._to_item(content, raw_text_hash)
+        self._events.publish("PostNormalized", raw_text_hash=raw_text_hash, product_name=item.product_name)
+        return item
+
+    def _request(self, payload: dict[str, Any]) -> dict[str, Any]:
+        body = json.dumps(payload).encode("utf-8")
+        request = Request(
+            self._endpoint,
+            data=body,
+            method="POST",
+            headers={
+                "Authorization": f"Bearer {self._api_key}",
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+        )
+        try:
+            with urlopen(request, timeout=self._timeout_seconds) as response:
+                return json.loads(response.read().decode("utf-8"))
+        except HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="replace")
+            raise RuntimeError(f"OpenAI normalizer request failed: {exc.code} {detail}") from exc
+        except (URLError, TimeoutError) as exc:
+            raise RuntimeError(f"OpenAI normalizer request failed: {exc}") from exc
+
+    @staticmethod
+    def _to_item(content: str, raw_text_hash: str) -> NormalizedItem:
+        parsed = json.loads(content)
+        if not isinstance(parsed, dict):
+            raise ValueError("OpenAI normalizer returned non-object JSON")
+        confidence = parsed.get("confidence", 0.0)
+        try:
+            confidence = max(0.0, min(1.0, float(confidence)))
+        except (TypeError, ValueError):
+            confidence = 0.0
+        return NormalizedItem(
+            product_name=parsed.get("product_name"),
+            brand=parsed.get("brand"),
+            model=parsed.get("model"),
+            condition=parsed.get("condition") or "unknown",
+            asking_price=parsed.get("asking_price"),
+            currency=parsed.get("currency") or "VND",
+            sold_status=bool(parsed.get("sold_status", False)),
+            location=parsed.get("location"),
+            confidence=confidence,
+            raw_text_hash=raw_text_hash,
+        )
 

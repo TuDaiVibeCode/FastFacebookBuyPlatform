@@ -29,10 +29,15 @@ Local URLs:
 Copy `backend/.env.example` to `backend/.env` for local overrides. The Compose file already sets the default demo values:
 
 - `USE_MOCK_LLM=true`
+- `LLM_PROVIDER=openai`
+- `OPENAI_API_KEY=`
+- `OPENAI_MODEL=gpt-5.5`
 - `STRICT_SOURCE_POLICY=false`
 - `SEMANTIC_CACHE_THRESHOLD=0.90`
 - `REDIS_URL=redis://redis:6379`
 - `CHROMA_URL=http://chromadb:8000`
+
+To use the real OpenAI normalizer, set `USE_MOCK_LLM=false` and put `OPENAI_API_KEY` in `backend/.env`. The Compose file loads that file even when you run `docker compose up` from `backend/infra/docker`.
 
 ## Demo Verification
 

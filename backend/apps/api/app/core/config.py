@@ -41,11 +41,15 @@ class Settings:
     exact_cache_ttl_seconds: int = 60 * 60 * 24
     semantic_cache_threshold: float = 0.90
     use_mock_llm: bool = True
+    llm_provider: str = "openai"
     strict_source_policy: bool = False
     sample_data_dir: Path = _backend_root() / "packages" / "sample-data"
     redis_url: str = "redis://redis:6379/0"
     chroma_url: str = "http://chromadb:8000"
     openai_api_key: str | None = None
+    openai_base_url: str = "https://api.openai.com/v1"
+    openai_model: str = "gpt-5.5"
+    openai_timeout_seconds: float = 20.0
 
 
 def get_settings() -> Settings:
@@ -55,6 +59,7 @@ def get_settings() -> Settings:
         exact_cache_ttl_seconds=_env_int("EXACT_CACHE_TTL_SECONDS", 60 * 60 * 24),
         semantic_cache_threshold=_env_float("SEMANTIC_CACHE_THRESHOLD", 0.90),
         use_mock_llm=_env_bool("USE_MOCK_LLM", True),
+        llm_provider=os.getenv("LLM_PROVIDER", "openai").strip().lower(),
         strict_source_policy=_env_bool("STRICT_SOURCE_POLICY", False),
         sample_data_dir=_env_path(
             "SAMPLE_DATA_DIR",
@@ -63,5 +68,8 @@ def get_settings() -> Settings:
         redis_url=os.getenv("REDIS_URL", "redis://redis:6379/0"),
         chroma_url=os.getenv("CHROMA_URL", "http://chromadb:8000"),
         openai_api_key=os.getenv("OPENAI_API_KEY") or None,
+        openai_base_url=os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1").rstrip("/"),
+        openai_model=os.getenv("OPENAI_MODEL", "gpt-5.5"),
+        openai_timeout_seconds=_env_float("OPENAI_TIMEOUT_SECONDS", 20.0),
     )
 
