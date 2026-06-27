@@ -6,14 +6,15 @@ export type NormalizedItem = {
   brand?: string;
   model?: string;
   condition?: string;
-  asking_price: number;
+  asking_price: number | null;
   sold_status?: boolean;
   confidence?: number;
+  location?: string | null;
 };
 
 export type DealScore = {
-  market_price: number;
-  discount_pct: number;
+  market_price: number | null;
+  discount_pct: number | null;
   verdict: DealVerdict;
 };
 
@@ -32,6 +33,60 @@ export type DealRecord = {
 
 export type DealFeedResponse = {
   items: DealRecord[];
+  next_cursor?: string | null;
+};
+
+export type AnalyzeRequest = {
+  text: string;
+  source?: "sample" | "manual" | "approved";
+  source_url?: string;
+};
+
+type BackendPayload = {
+  id?: string;
+  cache?: string;
+  raw_text?: string;
+  raw_post?: string;
+  source?: unknown;
+  created_at?: string | null;
+  updated_at?: string | null;
+  freshness?: string | null;
+  freshness_seconds?: number | null;
+  processing_ms?: number | null;
+  trace?: unknown[];
+  item?: {
+    product_name?: string | null;
+    brand?: string | null;
+    model?: string | null;
+    condition?: string | null;
+    asking_price?: number | null;
+    sold_status?: boolean;
+    confidence?: number | null;
+    location?: string | null;
+  };
+  deal?: {
+    market_price?: number | null;
+    discount_pct?: number | null;
+    verdict?: string;
+  };
+  product_name?: string | null;
+  asking_price?: number | null;
+  market_price?: number | null;
+  discount_pct?: number | null;
+  verdict?: string;
+  brand?: string | null;
+  model?: string | null;
+  condition?: string | null;
+  sold_status?: boolean;
+  confidence?: number | null;
+  location?: string | null;
+};
+
+type BackendDealCard = BackendPayload;
+type BackendAnalyzeLike = BackendPayload;
+
+type BackendDealFeedResponse = {
+  items?: BackendDealCard[];
   next_cursor?: string | null;
 };
 
@@ -65,14 +120,16 @@ async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-function normalizeDealFeed(payload: DealRecord[] | DealFeedResponse): DealFeedResponse {
-  if (Array.isArray(payload)) {
-    return { items: payload, next_cursor: null };
-  }
+function normalizeDeals(payload: BackendDealFeedResponse | BackendDealCard[]): DealFeedResponse {
+  const items = Array.isArray(payload)
+    ? payload
+    : Array.isArray(payload?.items)
+      ? payload.items
+      : [];
 
   return {
-    items: payload.items ?? [],
-    next_cursor: payload.next_cursor ?? null,
+    items: items.map(normalizeDealRecord),
+    next_cursor: Array.isArray(payload) ? null : payload?.next_cursor ?? null,
   };
 }
 
@@ -98,11 +155,11 @@ export async function getDeals(params: DealFeedParams = {}): Promise<DealFeedRes
 
   try {
     const query = search.toString();
-    const payload = await fetchJson<DealRecord[] | DealFeedResponse>(
+    const payload = await fetchJson<BackendDealFeedResponse | BackendDealCard[]>(
       `/api/v1/deals${query ? `?${query}` : ''}`
     );
 
-    return normalizeDealFeed(payload);
+    return normalizeDeals(payload);
   } catch (error) {
     if (!USE_SAMPLE_FALLBACK) {
       throw error;
@@ -116,7 +173,8 @@ export async function getDeal(id: string): Promise<DealRecord> {
   const { getSampleDeal } = await import('@/src/lib/sampleData');
 
   try {
-    return await fetchJson<DealRecord>(`/api/v1/deals/${encodeURIComponent(id)}`);
+    const payload = await fetchJson<BackendAnalyzeLike>(`/api/v1/deals/${encodeURIComponent(id)}`);
+    return normalizeDealRecord(payload);
   } catch (error) {
     if (!USE_SAMPLE_FALLBACK) {
       throw error;
@@ -126,7 +184,51 @@ export async function getDeal(id: string): Promise<DealRecord> {
   }
 }
 
-export function formatVnd(value?: number) {
+export async function analyzeDeal(payload: AnalyzeRequest): Promise<DealRecord> {
+  try {
+    const response = await fetchJson<BackendAnalyzeLike>('/api/v1/deals/analyze', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        text: payload.text.trim(),
+        source: payload.source ?? 'manual',
+        ...(payload.source_url ? { source_url: payload.source_url } : {}),
+      }),
+    });
+
+    return normalizeDealRecord(response);
+  } catch (error) {
+    if (!USE_SAMPLE_FALLBACK) {
+      throw error;
+    }
+
+    return buildFallbackAnalysis(payload);
+  }
+}
+
+async function buildFallbackAnalysis(payload: AnalyzeRequest): Promise<DealRecord> {
+  const { getSampleDeals } = await import('@/src/lib/sampleData');
+  const sample = getSampleDeals().items[0];
+  const now = new Date().toISOString();
+
+  if (!sample) {
+    throw new Error('No sample data available');
+  }
+
+  return {
+    ...sample,
+    id: `sample-${Date.now()}`,
+    raw_post: payload.text,
+    source: 'sample_fallback',
+    freshness: now,
+    created_at: now,
+    updated_at: now,
+  };
+}
+
+export function formatVnd(value?: number | null) {
   if (typeof value !== 'number' || Number.isNaN(value)) {
     return 'n/a';
   }
@@ -136,4 +238,83 @@ export function formatVnd(value?: number) {
     currency: 'VND',
     maximumFractionDigits: 0,
   }).format(value);
+}
+
+function normalizeDealRecord(payload: BackendAnalyzeLike | BackendDealCard): DealRecord {
+  const traceRaw = Array.isArray(payload?.trace) ? payload.trace : [];
+  const trace = traceRaw.filter((step): step is string => typeof step === 'string');
+  const verdict = parseVerdict(payload.deal?.verdict ?? payload.verdict);
+  const productName = payload.item?.product_name ?? payload.product_name ?? 'Unknown listing';
+  const askingPrice = pickNumber(payload.item?.asking_price ?? payload.asking_price);
+  const marketPrice = pickNumber(payload.deal?.market_price ?? payload.market_price);
+  const discountPct = pickNumber(payload.deal?.discount_pct ?? payload.discount_pct, true);
+  const rawPost = typeof payload.raw_post === 'string'
+    ? payload.raw_post
+    : typeof payload.raw_text === 'string'
+      ? payload.raw_text
+      : undefined;
+
+  return {
+    id: typeof payload.id === 'string' ? payload.id : `deal-${Date.now()}`,
+    item: {
+      product_name: productName,
+      brand: payload.item?.brand ?? undefined,
+      model: payload.item?.model ?? undefined,
+      condition: payload.item?.condition ?? 'unknown',
+      asking_price: askingPrice,
+      sold_status: Boolean(payload.item?.sold_status),
+      confidence: typeof payload.item?.confidence === 'number' ? payload.item.confidence : 0,
+      location: payload.item?.location ?? undefined,
+    },
+    deal: {
+      market_price: marketPrice,
+      discount_pct: discountPct,
+      verdict,
+    },
+    trace,
+    raw_post: rawPost,
+    source: resolveSource(payload.source),
+    created_at: payload.created_at || undefined,
+    updated_at: payload.updated_at || undefined,
+    freshness: payload.freshness || toFreshnessIso(payload.freshness_seconds),
+    // processing_ms is intentionally not part of the public mobile type.
+  };
+}
+
+function parseVerdict(value: unknown): DealVerdict {
+  if (value === 'HOT_DEAL' || value === 'OK_DEAL' || value === 'IGNORE') {
+    return value;
+  }
+
+  return 'IGNORE';
+}
+
+function pickNumber(value: unknown, allowFloat = false): number | null {
+  if (typeof value !== 'number' || Number.isNaN(value) || !Number.isFinite(value)) {
+    return null;
+  }
+  if (allowFloat) {
+    return value;
+  }
+  return Math.trunc(value);
+}
+
+function resolveSource(source: unknown): string | undefined {
+  if (typeof source === 'string') {
+    return source;
+  }
+  if (source && typeof source === 'object' && 'source' in source) {
+    const sourceValue = (source as { source?: unknown }).source;
+    return typeof sourceValue === 'string' ? sourceValue : undefined;
+  }
+
+  return undefined;
+}
+
+function toFreshnessIso(freshnessSeconds: unknown): string | undefined {
+  if (typeof freshnessSeconds !== 'number' || !Number.isFinite(freshnessSeconds)) {
+    return undefined;
+  }
+  const ts = Date.now() - Math.max(0, Math.floor(freshnessSeconds * 1000));
+  return new Date(ts).toISOString();
 }

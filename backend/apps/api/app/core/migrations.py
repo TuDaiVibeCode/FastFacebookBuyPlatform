@@ -15,7 +15,8 @@ def apply_auth_migrations(database_url: str) -> None:
         LOGGER.warning("DATABASE_URL not configured; skipping auth migrations")
         return
 
-    migrations_dir = Path(__file__).resolve().parents[1] / "db" / "migrations"
+    backend_root = Path(__file__).resolve().parents[2]
+    migrations_dir = backend_root / "db" / "migrations"
     if not migrations_dir.exists():
         return
 
@@ -43,4 +44,3 @@ def run() -> None:
 
 if __name__ == "__main__":
     run()
-

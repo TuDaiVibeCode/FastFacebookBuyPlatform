@@ -15,7 +15,13 @@ import {
   View,
 } from 'react-native';
 
-import { DealRecord, formatVnd, getDeals } from '@/src/lib/api';
+import {
+  AnalyzeRequest,
+  DealRecord,
+  analyzeDeal,
+  formatVnd,
+  getDeals,
+} from '@/src/lib/api';
 import { getSampleDeals } from '@/src/lib/sampleData';
 
 type ChatRole = 'assistant' | 'user';
@@ -25,6 +31,8 @@ type ChatMessage = {
   role: ChatRole;
   text: string;
   productIds?: string[];
+  analysis?: DealRecord;
+  isLoading?: boolean;
 };
 
 const PROMPTS = [
@@ -54,7 +62,9 @@ function findMatchingDeals(input: string, catalog: DealRecord[]) {
         return false;
       }
 
-      if (wantsCheap && deal.item.asking_price > 10000000) {
+      const askingPrice = deal.item.asking_price ?? 0;
+
+      if (wantsCheap && askingPrice > 10000000) {
         return false;
       }
 
@@ -71,7 +81,7 @@ function findMatchingDeals(input: string, catalog: DealRecord[]) {
     .slice(0, 3);
 }
 
-function buildAssistantReply(input: string, catalog: DealRecord[]): ChatMessage {
+function buildLocalAssistantReply(input: string, catalog: DealRecord[]): ChatMessage {
   const normalized = input.toLowerCase();
   const fallbackProductIds = catalog.slice(0, 3).map((deal) => deal.id);
 
@@ -118,6 +128,37 @@ function buildAssistantReply(input: string, catalog: DealRecord[]): ChatMessage 
     text:
       'No exact match found. Try "best deals", "iPhone", "under 10m", or open Deals.',
     productIds: fallbackProductIds.slice(0, 2),
+  };
+}
+
+function buildAiReply(input: string, analysis: DealRecord): ChatMessage {
+  const normalized = input.toLowerCase();
+  const discountText =
+    analysis.deal.discount_pct === null || analysis.deal.discount_pct === undefined
+      ? 'n/a'
+      : `${analysis.deal.discount_pct}%`;
+  const marketText = formatVnd(analysis.deal.market_price);
+
+  let message = `${analysis.item.product_name} is `;
+
+  if (analysis.deal.verdict === 'HOT_DEAL') {
+    message += `a good match. It is ${discountText} below market (${marketText} market).`;
+  } else if (analysis.deal.verdict === 'OK_DEAL') {
+    message += `fair value. It is ${discountText} below market (${marketText} market).`;
+  } else {
+    message += `not a strong pick right now compared to market (${marketText}).`;
+  }
+
+  if (normalized.includes('how') || normalized.includes('work')) {
+    message += ' Check uses cache + pricing baseline + price scoring.';
+  }
+
+  return {
+    id: `assistant-${Date.now()}`,
+    role: 'assistant',
+    text: message,
+    productIds: [analysis.id],
+    analysis,
   };
 }
 
@@ -191,8 +232,10 @@ export function ChatScreen() {
   });
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const listRef = useRef<FlatList<ChatMessage>>(null);
-  const canSend = input.trim().length > 0;
+  const canSend = input.trim().length > 0 && !isSending;
   const catalog = useMemo(() => catalogQuery.data?.items ?? [], [catalogQuery.data?.items]);
   const starterMessages = useMemo<ChatMessage[]>(() => {
     if (!catalog.length) {
@@ -214,23 +257,53 @@ export function ChatScreen() {
     [messages, starterMessages]
   );
 
-  function sendMessage(text: string) {
+  async function sendMessage(text: string) {
     const trimmed = text.trim();
 
     if (!trimmed) {
       return;
     }
 
+    setSendError(null);
+    setIsSending(true);
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
       text: trimmed,
     };
-    const assistantMessage = buildAssistantReply(trimmed, catalog);
+    const assistantLoadingMessageId = `assistant-loading-${Date.now()}`;
+    const assistantMessage: ChatMessage = {
+      id: assistantLoadingMessageId,
+      role: 'assistant',
+      text: 'Running analysis...',
+      isLoading: true,
+      productIds: catalog.slice(0, 1).map((deal) => deal.id),
+    };
 
     setMessages((current) => [...current, userMessage, assistantMessage]);
     setInput('');
     requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }));
+
+    try {
+      const request: AnalyzeRequest = {
+        text: trimmed,
+        source: 'manual',
+      };
+      const analysis = await analyzeDeal(request);
+      const reply = buildAiReply(trimmed, analysis);
+
+      setMessages((current) =>
+        current.map((message) => (message.id === assistantLoadingMessageId ? reply : message)),
+      );
+    } catch (error) {
+      const fallback = buildLocalAssistantReply(trimmed, catalog);
+      setSendError(error instanceof Error ? error.message : 'Analyze failed');
+      setMessages((current) =>
+        current.map((message) => (message.id === assistantLoadingMessageId ? fallback : message)),
+      );
+    } finally {
+      setIsSending(false);
+    }
   }
 
   return (
@@ -258,6 +331,7 @@ export function ChatScreen() {
           contentContainerStyle={styles.messages}
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
         />
+        {sendError ? <Text style={styles.errorText}>{sendError}</Text> : null}
 
         <ScrollView
           horizontal
@@ -371,6 +445,12 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     fontSize: 15,
     lineHeight: 22,
+  },
+  errorText: {
+    color: '#B42318',
+    paddingHorizontal: 16,
+    paddingTop: 4,
+    paddingBottom: 8,
   },
   messages: {
     padding: 16,

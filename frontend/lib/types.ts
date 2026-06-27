@@ -4,8 +4,8 @@ export type Verdict = "HOT_DEAL" | "OK_DEAL" | "IGNORE";
 
 export type NormalizedItem = {
   product_name: string;
-  brand: string;
-  model: string;
+  brand?: string;
+  model?: string;
   condition: string;
   asking_price: number | null;
   currency?: string;
@@ -27,7 +27,7 @@ export type DealRecord = {
   item: NormalizedItem;
   deal: DealScore;
   raw_post?: string;
-  source?: "sample" | "manual" | "approved";
+  source?: string;
   freshness?: string;
   trace?: string[];
   processing_ms?: number;
@@ -39,6 +39,18 @@ export type AnalyzeRequest = {
 };
 
 export type AnalyzeResponse = DealRecord;
+
+export type AuthUser = {
+  id: string;
+  email: string;
+  created_at: string;
+};
+
+export type AuthTokenResponse = {
+  access_token: string;
+  token_type: string;
+  user: AuthUser;
+};
 
 export type DealsResponse = {
   items: DealRecord[];
@@ -60,4 +72,7 @@ export type HealthStatus = {
   chromadb: "ok" | "error" | "unknown";
   llm_mode: "mock" | "real" | "unknown";
   sample_data_loaded: boolean;
+  market_price_count?: number;
+  exact_cache?: string;
+  semantic_cache?: string;
 };
