@@ -7,12 +7,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /workspace/backend/apps/api
 
 RUN python -m pip install --upgrade pip && \
-    python -m pip install fastapi "uvicorn[standard]" pydantic pydantic-settings redis chromadb httpx python-dotenv
+    python -m pip install "fastapi>=0.115.0" "pydantic>=2.7.0" "uvicorn[standard]>=0.30.0"
 
-COPY . /workspace/backend
-
-RUN if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi && \
-    if [ -f pyproject.toml ]; then python -m pip install -e .; fi
+COPY apps/api /workspace/backend/apps/api
+COPY packages/sample-data /workspace/backend/packages/sample-data
 
 EXPOSE 8000
 
