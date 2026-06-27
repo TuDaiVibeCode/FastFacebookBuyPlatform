@@ -1,6 +1,6 @@
 # Deal Radar Mobile
 
-Expo 54 / React Native companion app for Deal Radar. Mobile proves ChatGPT-like deal chat, product browsing, multi-client cache behavior, deal detail, verdict filters, cache badges, offline stale state, pull-to-refresh, metrics, and service health.
+Expo 54 / React Native companion app for Deal Radar. Mobile proves ChatGPT-like deal chat, product browsing, multi-client cache behavior, deal detail, verdict filters, cache badges, offline stale state, and pull-to-refresh.
 
 ## Environment
 
@@ -34,7 +34,6 @@ Mobile consumes:
 
 - `GET /api/v1/deals?verdict=&q=&limit=&cursor=`
 - `GET /api/v1/deals/{id}`
-- `GET /api/v1/cache/metrics`
 - `GET /api/v1/health`
 
 Cache values: `miss`, `redis_hit`, `semantic_hit`.
@@ -53,12 +52,11 @@ Verdicts: `HOT_DEAL`, `OK_DEAL`, `IGNORE`.
 
 - `Chat` tab: ChatGPT-style assistant, prompt chips, bottom composer, product result previews, detail links.
 - `Browse` tab: product feed, search, verdict chips, cache badges, freshness labels, cursor load more.
-- `Metrics` tab: cache hit rate, LLM calls avoided/made, exact/semantic hits, health.
 - `deals/[id]`: raw post, normalized item, market math, cache source, trace.
 
 ## Demo Fallback
 
-The app calls API endpoints first. If API is unavailable, sample fallback data keeps chat, browse, detail, metrics, and health screens working for demo use.
+The app calls API endpoints first. If API is unavailable, sample fallback data keeps chat, browse, detail, and health behavior working for demo use.
 
 Disable fallback when testing strict backend behavior:
 

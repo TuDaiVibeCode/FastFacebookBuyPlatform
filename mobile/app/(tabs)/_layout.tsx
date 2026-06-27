@@ -42,13 +42,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <MaterialIcons size={26} name="storefront" color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Metrics',
-          tabBarIcon: ({ color }) => <MaterialIcons size={26} name="monitor" color={color} />,
-        }}
-      />
     </Tabs>
   );
 }

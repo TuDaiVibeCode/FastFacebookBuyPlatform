@@ -13,9 +13,8 @@ Use `COMPLETE_PLAN.md` as the source of truth. The current `mobile/` scaffold us
 - Replace Expo template content with Deal Radar screens.
 - Build a deal feed tab with deal cards, verdict filter, cache badges, freshness labels, and pull-to-refresh.
 - Build a deal detail route with raw post, normalized item, asking price, market price, discount, verdict, cache source, and trace.
-- Build a metrics/status tab with cache hit rate, LLM calls avoided, and API/Redis/Chroma/mock-mode health.
 - Add TanStack Query with AsyncStorage persistence.
-- Add API access for feed, detail, metrics, and health endpoints.
+- Add API access for feed, detail, and health endpoints.
 - Keep v1 out of scope: auth, payments, push notifications, full crawler, automated Facebook actions, and seller chat.
 
 ## Cache Behavior
@@ -33,7 +32,6 @@ Keep Expo Router in the root `mobile/` app.
 Rename tab labels:
 
 - `Home` -> `Deals`
-- `Explore` -> `Metrics`
 
 Add mobile modules:
 
@@ -82,7 +80,6 @@ Consume these backend endpoints:
 
 - `GET /api/v1/deals?verdict=&q=&limit=&cursor=`
 - `GET /api/v1/deals/{id}`
-- `GET /api/v1/cache/metrics`
 - `GET /api/v1/health`
 
 Expected analyze response shape, reused by detail and feed data:
