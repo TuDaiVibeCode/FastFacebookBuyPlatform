@@ -1,36 +1,121 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Deal Radar Frontend
 
-## Getting Started
+Next.js frontend scaffold for Deal Radar, a cache-first deal intelligence demo for noisy Vietnamese resale posts.
 
-First, run the development server:
+## Purpose
+
+The web UI should prove the engineering pipeline:
+
+- Analyze noisy social-commerce text.
+- Show normalized product data.
+- Compare asking price against market price.
+- Display verdict, discount math, cache source, and freshness.
+- Demonstrate exact Redis hits and semantic ChromaDB hits.
+
+This frontend is not a generic marketplace app. V1 excludes auth, checkout, seller chat, and live Facebook scraping.
+
+## Current Location
+
+This folder currently contains the initial Next.js scaffold. Repository plans require final application code to live at:
+
+```txt
+deal-radar/apps/web/
+```
+
+Use this scaffold as starter material or move/regenerate it into the required final location during implementation.
+
+## Stack
+
+- Next.js App Router
+- React 19
+- TypeScript
+- Tailwind CSS v4
+- Geist fonts through `next/font`
+
+## Planned Screens
+
+- `/` - deal feed dashboard with verdict filter, cache badges, freshness, and discount math.
+- `/demo` - analyze console with raw post input, sample buttons, pipeline trace, and result panel.
+- `/deals/[id]` - deal detail with raw post, normalized JSON, market comparison, cache path, and trace.
+
+## Backend Contract
+
+Expected backend base path:
+
+```txt
+/api/v1
+```
+
+Expected endpoints:
+
+- `GET /deals`
+- `GET /deals/{id}`
+- `POST /analyze`
+- `GET /metrics/cache`
+- `GET /health`
+
+Expected cache states:
+
+- `miss`
+- `redis_hit`
+- `semantic_hit`
+
+Expected verdicts:
+
+- `HOT_DEAL`
+- `OK_DEAL`
+- `IGNORE`
+
+## Environment
+
+```env
+API_BASE_URL=http://api:8000
+NEXT_PUBLIC_API_BASE_URL=http://localhost:18000
+```
+
+## Development
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Default local URL:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```txt
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Docker target from root plan:
 
-## Learn More
+```txt
+http://localhost:13000
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Verification
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run lint
+npm run build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Planned browser checks:
 
-## Deploy on Vercel
+- First analyze returns `miss`.
+- Same post returns `redis_hit`.
+- Paraphrased post returns `semantic_hit`.
+- Feed updates after analyze.
+- Metrics panel shows cache savings.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Notes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `COMPLETE_PLAN.md` is the source of truth.
+- `PLAN.md` in this folder contains the frontend implementation plan.
+- Next.js 16 requires `revalidateTag("deals", "max")` instead of the old one-argument form.
