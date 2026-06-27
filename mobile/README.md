@@ -1,50 +1,67 @@
-# Welcome to your Expo app 👋
+# Deal Radar Mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Expo 54 / React Native companion app for Deal Radar. Mobile proves ChatGPT-like deal chat, product browsing, multi-client cache behavior, deal detail, verdict filters, cache badges, offline stale state, pull-to-refresh, metrics, and service health.
 
-## Get started
+## Environment
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+Create `.env` for simulator/local API access:
 
 ```bash
-npm run reset-project
+EXPO_PUBLIC_API_BASE_URL=http://localhost:18000
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+For Android emulator, use host bridge if `localhost` cannot reach API:
 
-## Learn more
+```bash
+EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:18000
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## Commands
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+npm install
+npm run lint
+npm run typecheck
+npm run export:web
+npm run ios
+npm run android
+npm run web
+```
 
-## Join the community
+## API Contract
 
-Join our community of developers creating universal apps.
+Mobile consumes:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- `GET /api/v1/deals?verdict=&q=&limit=&cursor=`
+- `GET /api/v1/deals/{id}`
+- `GET /api/v1/metrics/cache`
+- `GET /api/v1/health`
+
+Cache values: `miss`, `redis_hit`, `semantic_hit`.
+
+Verdicts: `HOT_DEAL`, `OK_DEAL`, `IGNORE`.
+
+## Cache Behavior
+
+- Feed stale time: 30 seconds.
+- Detail stale time: 5 minutes.
+- Persisted cache max age: 24 hours via AsyncStorage.
+- Pull-to-refresh forces refetch.
+- Offline feed shows stale cached deals with visible banner.
+
+## Screens
+
+- `Chat` tab: ChatGPT-style assistant, prompt chips, bottom composer, product result previews, detail links.
+- `Browse` tab: product feed, search, verdict chips, cache badges, freshness labels, cursor load more.
+- `Metrics` tab: cache hit rate, LLM calls avoided/made, exact/semantic hits, health.
+- `deals/[id]`: raw post, normalized item, market math, cache source, trace.
+
+## Demo Fallback
+
+The app calls API endpoints first. If API is unavailable, sample fallback data keeps chat, browse, detail, metrics, and health screens working for demo use.
+
+Disable fallback when testing strict backend behavior:
+
+```bash
+EXPO_PUBLIC_USE_SAMPLE_FALLBACK=0
+```
