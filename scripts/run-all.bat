@@ -67,10 +67,6 @@ if errorlevel 1 exit /b 1
 call :wait_for_http Backend "http://127.0.0.1:%API_HTTP_PORT%/api/v1/health"
 if errorlevel 1 exit /b 1
 
-if exist "%ROOT_DIR%\scripts\deploy-windows.txt" (
-  echo.
-)
-
 where npm >nul 2>&1
 if errorlevel 1 (
   echo npm missing; skip frontend and mobile.
