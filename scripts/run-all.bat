@@ -7,6 +7,7 @@ set "FRONTEND_DIR=%ROOT_DIR%\frontend"
 set "MOBILE_DIR=%ROOT_DIR%\mobile"
 set "COMPOSE_FILE=%BACKEND_DIR%\infra\docker\docker-compose.yml"
 set "ENV_FILE=%BACKEND_DIR%\.env"
+set "COMPOSE_CMD="
 set "RUN_LOG_DIR=%ROOT_DIR%\.run"
 set "API_HTTP_PORT=18000"
 set "FRONTEND_PORT=3000"
@@ -20,6 +21,9 @@ if not exist "%RUN_LOG_DIR%" mkdir "%RUN_LOG_DIR%"
 if not exist "%ENV_FILE%" (
   if exist "%BACKEND_DIR%\.env.example" (
     copy "%BACKEND_DIR%\.env.example" "%ENV_FILE%" >nul
+  ) else (
+    echo Missing %ENV_FILE% and %BACKEND_DIR%\.env.example
+    exit /b 1
   )
 )
 
@@ -45,8 +49,30 @@ for /F "tokens=2 delims==" %%A in (`findstr "^CHROMA_HOST_PORT=" "%ENV_FILE%"`) 
 where docker >nul 2>&1
 if errorlevel 1 (
   echo docker command not found.
+  goto :CHECK_DOCKER_COMPOSE
+)
+
+docker compose version >nul 2>&1
+if errorlevel 0 (
+  set "COMPOSE_CMD=docker compose"
+) else (
+:CHECK_DOCKER_COMPOSE
+  where docker-compose >nul 2>&1
+  if errorlevel 1 (
+    echo Neither docker compose nor docker-compose is available.
+    exit /b 1
+  )
+  set "COMPOSE_CMD=docker-compose"
+)
+
+if "%COMPOSE_CMD%"=="" (
+  echo No docker compose command available.
   exit /b 1
 )
+
+goto :AFTER_COMPOSE_CHECK
+
+:AFTER_COMPOSE_CHECK
 where npm >nul 2>&1
 if errorlevel 1 (
   echo npm not found. Frontend and mobile start will be skipped.
@@ -54,7 +80,7 @@ if errorlevel 1 (
 
 echo Starting backend stack...
 cd /d "%BACKEND_DIR%\infra\docker"
-docker compose --env-file "%ENV_FILE%" -f "%COMPOSE_FILE%" up -d --build
+"%COMPOSE_CMD%" --env-file "%ENV_FILE%" -f "%COMPOSE_FILE%" up -d --build
 if errorlevel 1 exit /b 1
 cd /d "%ROOT_DIR%"
 

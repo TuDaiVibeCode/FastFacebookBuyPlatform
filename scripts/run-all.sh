@@ -8,11 +8,12 @@ FRONTEND_DIR="$ROOT_DIR/frontend"
 MOBILE_DIR="$ROOT_DIR/mobile"
 COMPOSE_FILE="$BACKEND_INFRA_DIR/docker-compose.yml"
 ENV_FILE="$BACKEND_DIR/.env"
-COMPOSE_PID=""
 FRONTEND_PID=""
 MOBILE_PID=""
 RUN_LOG_DIR="$ROOT_DIR/.run"
 RETRIES="${DEPLOY_RETRIES:-120}"
+COMPOSE_BIN="docker"
+COMPOSE_ARGS=(compose)
 
 mkdir -p "$RUN_LOG_DIR"
 
@@ -23,12 +24,37 @@ fi
 if [[ -f "$ENV_FILE" ]]; then
   # shellcheck disable=SC1090
   source "$ENV_FILE"
+else
+  if [[ ! -f "$BACKEND_DIR/.env.example" ]]; then
+    echo "Missing backend/.env and backend/.env.example"
+    exit 1
+  fi
 fi
 
 PYTHON_BIN="python3"
 if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
   PYTHON_BIN="python"
 fi
+
+
+def detect_compose() {
+  if docker compose version >/dev/null 2>&1; then
+    COMPOSE_BIN="docker"
+    COMPOSE_ARGS=(compose)
+    return 0
+  fi
+  if command -v docker-compose >/dev/null 2>&1; then
+    COMPOSE_BIN="docker-compose"
+    COMPOSE_ARGS=()
+    return 0
+  fi
+  echo "Neither docker compose nor docker-compose is available"
+  exit 1
+}
+
+compose() {
+  "${COMPOSE_BIN}" "${COMPOSE_ARGS[@]}" "$@"
+}
 
 require_cmd() {
   local cmd="$1"
@@ -113,18 +139,14 @@ cleanup() {
   if [[ -n "${MOBILE_PID}" ]]; then
     kill "$MOBILE_PID" 2>/dev/null || true
   fi
-  docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" down >/dev/null 2>&1 || true
+  compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" down >/dev/null 2>&1 || true
 }
 
 trap cleanup EXIT INT TERM
 
 require_cmd docker
 require_cmd curl
-
-if ! docker compose version >/dev/null 2>&1; then
-  echo "docker compose plugin is required"
-  exit 1
-fi
+detect_compose
 
 if [[ ! -f "$COMPOSE_FILE" ]]; then
   echo "Missing compose file: $COMPOSE_FILE"
@@ -132,7 +154,7 @@ if [[ ! -f "$COMPOSE_FILE" ]]; then
 fi
 
 echo "Starting backend docker stack..."
-docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --build | tee "$RUN_LOG_DIR/backend.log"
+compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --build | tee "$RUN_LOG_DIR/backend.log"
 
 wait_for_tcp "PostgreSQL" "127.0.0.1" "${POSTGRES_HOST_PORT:-15432}"
 wait_for_tcp "Redis" "127.0.0.1" "${REDIS_HOST_PORT:-16379}"
@@ -169,7 +191,7 @@ echo "Frontend: http://localhost:${FRONTEND_PORT:-3000}"
 echo "Backend:  http://localhost:${API_HTTP_PORT:-18000}"
 echo "Backend logs: $RUN_LOG_DIR/backend.log"
 echo "API logs:"
-docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" logs --tail=30 api
+compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" logs --tail=30 api
 echo "Press Ctrl+C to stop all services."
 
 wait
