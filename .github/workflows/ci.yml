@@ -1,0 +1,157 @@
+name: CI/CD
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend CI
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend/apps/api
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: |
+            backend/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r ../../requirements.txt
+
+      - name: Run API tests
+        run: |
+          python -m pytest
+
+  deploy-staging:
+    name: Deploy Staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs:
+      - backend
+      - frontend
+      - mobile
+      - landing
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Publish image/build artifacts
+        run: |
+          echo "Staging deploy placeholder."
+          echo "All services passed CI. Add deployment commands here."
+
+  deploy-production:
+    name: Deploy Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs:
+      - backend
+      - frontend
+      - mobile
+      - landing
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Publish release
+        run: |
+          echo "Production deploy placeholder."
+          echo "All services passed CI. Add blue/green or canary deploy commands here."
+
+  frontend:
+    name: Frontend CI
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  mobile:
+    name: Mobile CI
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Export web bundle
+        run: npm run export:web
+
+  landing:
+    name: Landing Page CI
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate landing artifacts
+        run: |
+          test -f landing/README.md || (echo "landing README missing" && exit 1)
+          test -f landing/.env.example || (echo ".env.example missing in landing" && exit 1)
+          grep -q "LANDING_PORT" landing/.env.example || (echo "LANDING_PORT missing in landing/.env.example" && exit 1)
+
+      - name: Build landing project when package exists
+        run: |
+          if [ -f landing/package.json ]; then
+            npm ci --prefix landing
+            npm run lint --prefix landing
+            npm run build --prefix landing
+          else
+            echo "landing is currently a static/documentation entry point; no build toolchain detected."
+          fi
