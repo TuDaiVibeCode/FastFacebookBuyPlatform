@@ -54,7 +54,7 @@ Copy `backend/.env.example` to `backend/.env` for local overrides. The Compose f
 - `USE_MOCK_LLM=true`
 - `LLM_PROVIDER=openai`
 - `OPENAI_API_KEY=`
-- `OPENAI_MODEL=gpt-5.5`
+- `OPENAI_MODEL=gpt-4.1-mini`
 - `STRICT_SOURCE_POLICY=false`
 - `SEMANTIC_CACHE_THRESHOLD=0.90`
 - `REDIS_URL=redis://redis:6379`
