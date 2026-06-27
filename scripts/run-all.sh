@@ -37,7 +37,7 @@ if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
 fi
 
 
-def detect_compose() {
+detect_compose() {
   if docker compose version >/dev/null 2>&1; then
     COMPOSE_BIN="docker"
     COMPOSE_ARGS=(compose)
