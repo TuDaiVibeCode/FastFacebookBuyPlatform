@@ -1,0 +1,69 @@
+services:
+  api:
+    build:
+      context: ../../
+      dockerfile: infra/docker/api.Dockerfile
+    image: deal-radar-api:local
+    ports:
+      - "18000:8000"
+    environment:
+      API_HOST: 0.0.0.0
+      API_PORT: "8000"
+      REDIS_URL: redis://redis:6379
+      CHROMA_URL: http://chromadb:8000
+      SEMANTIC_CACHE_THRESHOLD: "0.90"
+      USE_MOCK_LLM: "true"
+      OPENAI_API_KEY: ""
+      STRICT_SOURCE_POLICY: "false"
+      SAMPLE_DATA_DIR: /workspace/deal-radar/packages/sample-data
+    depends_on:
+      redis:
+        condition: service_healthy
+      chromadb:
+        condition: service_started
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ../../
+      dockerfile: infra/docker/web.Dockerfile
+    image: deal-radar-web:local
+    ports:
+      - "13000:3000"
+    environment:
+      API_BASE_URL: http://api:8000
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:18000
+    depends_on:
+      api:
+        condition: service_started
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "16379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  chromadb:
+    image: chromadb/chroma:0.5.23
+    ports:
+      - "18001:8000"
+    environment:
+      IS_PERSISTENT: "TRUE"
+      PERSIST_DIRECTORY: /chroma/chroma
+      ANONYMIZED_TELEMETRY: "FALSE"
+    volumes:
+      - chroma-data:/chroma/chroma
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+  chroma-data:
