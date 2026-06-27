@@ -1,65 +1,143 @@
-import Image from "next/image";
+import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faArrowRight,
+  faCartShopping,
+  faMagnifyingGlass,
+  faSliders,
+} from "@fortawesome/free-solid-svg-icons";
 
-export default function Home() {
+import { AppSidebar } from "@/components/app-sidebar";
+import { CacheBadge } from "@/components/cache-badge";
+import { VerdictBadge } from "@/components/verdict-badge";
+import { getCacheMetrics, getDeals, getHealth } from "@/lib/api";
+import type { DealRecord, Verdict } from "@/lib/types";
+
+const verdicts = new Set(["ALL", "HOT_DEAL", "OK_DEAL", "IGNORE"]);
+
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ verdict?: string; q?: string }>;
+}) {
+  const { verdict: rawVerdict, q = "" } = await searchParams;
+  const activeVerdict = verdicts.has(rawVerdict ?? "")
+    ? (rawVerdict as Verdict | "ALL")
+    : "ALL";
+
+  const [deals, metrics, health] = await Promise.all([
+    getDeals({ verdict: activeVerdict, q, limit: 20 }),
+    getCacheMetrics(),
+    getHealth(),
+  ]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main className="app-frame">
+      <AppSidebar active="browse" />
+
+      <section className="content-shell">
+        <section className="market-panel">
+          <div className="market-header">
+            <div>
+              <p className="market-kicker">Marketplace</p>
+              <h1>Browse deals</h1>
+              <span>
+                {deals.items.length} listings, {Math.round(metrics.cache_hit_rate * 100)}%
+                cache hit rate, API {health.api}
+              </span>
+            </div>
+            <Link href="/chat" className="market-cta">
+              Ask AI
+              <FontAwesomeIcon icon={faArrowRight} />
+            </Link>
+          </div>
+
+          <form className="market-search">
+            <FontAwesomeIcon icon={faMagnifyingGlass} />
+            <input name="q" defaultValue={q} placeholder="Search phone, laptop, console" />
+            <button>
+              <FontAwesomeIcon icon={faSliders} />
+              Filter
+            </button>
+          </form>
+
+          <div className="filter-row">
+            <FilterLink label="All" value="ALL" active={activeVerdict} />
+            <FilterLink label="Hot deal" value="HOT_DEAL" active={activeVerdict} />
+            <FilterLink label="Ok deal" value="OK_DEAL" active={activeVerdict} />
+            <FilterLink label="Ignore" value="IGNORE" active={activeVerdict} />
+          </div>
+
+          {deals.items.length > 0 ? (
+            <div className="product-grid">
+              {deals.items.map((deal, index) => (
+                <ProductCard key={deal.id} deal={deal} index={index} />
+              ))}
+            </div>
+          ) : (
+            <div className="empty-market">
+              No products match this filter. Paste a post in chat to create one.
+            </div>
+          )}
+        </section>
+      </section>
+    </main>
   );
+}
+
+function FilterLink({
+  label,
+  value,
+  active,
+}: {
+  label: string;
+  value: Verdict | "ALL";
+  active: Verdict | "ALL";
+}) {
+  const href = value === "ALL" ? "/" : `/?verdict=${value}`;
+  return (
+    <Link href={href} className={active === value ? "active" : ""}>
+      {label}
+    </Link>
+  );
+}
+
+function ProductCard({ deal, index }: { deal: DealRecord; index: number }) {
+  const askingPrice = formatCurrency(deal.item.asking_price);
+  const marketPrice = formatCurrency(deal.deal.market_price);
+  const discount = deal.deal.discount_pct ?? 0;
+
+  return (
+    <Link href={`/deals/${deal.id}`} className="product-card">
+      <div className={`product-art product-art-${(index % 4) + 1}`}>
+        <FontAwesomeIcon icon={faCartShopping} />
+        <span>{deal.item.brand}</span>
+      </div>
+      <div className="product-copy">
+        <div className="badge-line">
+          <VerdictBadge verdict={deal.deal.verdict} />
+          <CacheBadge cache={deal.cache} />
+        </div>
+        <h3>{deal.item.product_name}</h3>
+        <p>{deal.raw_post ?? `${deal.item.brand} ${deal.item.model}`}</p>
+        <div className="price-row">
+          <strong>{askingPrice}</strong>
+          <span>{discount}% off market</span>
+        </div>
+        <div className="meta-row">
+          <span>{marketPrice} market</span>
+          <span>{deal.item.location ?? "Vietnam"}</span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function formatCurrency(value: number | null | undefined) {
+  if (!value) return "n/a";
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0,
+  }).format(value);
 }
