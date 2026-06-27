@@ -11,6 +11,7 @@ const API_BASE_URL =
 
 export async function POST(request: Request) {
   let payload: AnalyzeRequest;
+  const authHeader = request.headers.get("authorization");
 
   try {
     payload = (await request.json()) as AnalyzeRequest;
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Post text is required" }, { status: 400 });
   }
 
-  const result = await proxyAnalyze(payload).catch(() => analyzeWithMockCache(payload));
+  const result = await proxyAnalyze(payload, authHeader).catch(() => analyzeWithMockCache(payload));
 
   revalidateTag(CACHE_TAGS.deals, "max");
   if (result.id) {
@@ -32,13 +33,21 @@ export async function POST(request: Request) {
   return Response.json(result);
 }
 
-async function proxyAnalyze(payload: AnalyzeRequest): Promise<AnalyzeResponse> {
+async function proxyAnalyze(
+  payload: AnalyzeRequest,
+  authHeader: string | null
+): Promise<AnalyzeResponse> {
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  });
+  if (authHeader) {
+    headers.set("Authorization", authHeader);
+  }
+
   const response = await fetch(`${API_BASE_URL}/api/v1/deals/analyze`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
+    headers,
     body: JSON.stringify(payload),
     cache: "no-store",
   });

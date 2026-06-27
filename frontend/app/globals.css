@@ -627,6 +627,55 @@ input {
   overflow: hidden;
 }
 
+.auth-shell {
+  max-width: 420px;
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+}
+
+.auth-shell h1 {
+  margin: 0 0 2px;
+  font-size: 24px;
+}
+
+.auth-field {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.auth-field input {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0 12px;
+  background: #ffffff;
+}
+
+.auth-shell button {
+  height: 42px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 760;
+}
+
+.auth-error {
+  margin: 0;
+  color: #b42318;
+}
+
+.auth-success {
+  margin: 0;
+  color: #157a50;
+}
+
 .price-row,
 .meta-row {
   display: flex;

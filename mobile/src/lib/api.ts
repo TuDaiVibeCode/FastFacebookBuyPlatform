@@ -1,3 +1,5 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 export type CacheState = 'miss' | 'redis_hit' | 'semantic_hit';
 export type DealVerdict = 'HOT_DEAL' | 'OK_DEAL' | 'IGNORE';
 
@@ -40,6 +42,23 @@ export type AnalyzeRequest = {
   text: string;
   source?: "sample" | "manual" | "approved";
   source_url?: string;
+};
+
+export type AuthRequest = {
+  email: string;
+  password: string;
+};
+
+export type AuthUser = {
+  id: string;
+  email: string;
+  created_at: string;
+};
+
+export type AuthTokenResponse = {
+  access_token: string;
+  token_type: string;
+  user: AuthUser;
 };
 
 type BackendPayload = {
@@ -99,17 +118,42 @@ export type DealFeedParams = {
 
 const DEFAULT_API_BASE_URL = 'http://localhost:18000';
 const USE_SAMPLE_FALLBACK = process.env.EXPO_PUBLIC_USE_SAMPLE_FALLBACK !== '0';
+const AUTH_TOKEN_KEY = process.env.EXPO_PUBLIC_AUTH_TOKEN_KEY ?? 'deal-radar-auth-token';
 
 export const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL?.replace(/\/$/, '') ?? DEFAULT_API_BASE_URL;
 
-async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
+export async function getStoredAuthToken(): Promise<string | null> {
+  return AsyncStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+export async function setStoredAuthToken(token: string | null): Promise<void> {
+  if (token) {
+    await AsyncStorage.setItem(AUTH_TOKEN_KEY, token);
+    return;
+  }
+
+  await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
+}
+
+type FetchInit = RequestInit & {
+  auth?: boolean;
+};
+
+async function fetchJson<T>(path: string, init: FetchInit = {}): Promise<T> {
+  const headers = new Headers(init.headers);
+  headers.set('Accept', 'application/json');
+
+  if (init.auth !== false) {
+    const token = await getStoredAuthToken();
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+  }
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: {
-      Accept: 'application/json',
-      ...init?.headers,
-    },
     ...init,
+    headers,
   });
 
   if (!response.ok) {
@@ -208,6 +252,36 @@ export async function analyzeDeal(payload: AnalyzeRequest): Promise<DealRecord> 
   }
 }
 
+export async function registerUser(payload: AuthRequest): Promise<AuthTokenResponse> {
+  const response = await fetchJson<AuthTokenResponse>('/api/v1/auth/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+    auth: false,
+  });
+  await setStoredAuthToken(response.access_token);
+  return response;
+}
+
+export async function loginUser(payload: AuthRequest): Promise<AuthTokenResponse> {
+  const response = await fetchJson<AuthTokenResponse>('/api/v1/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+    auth: false,
+  });
+  await setStoredAuthToken(response.access_token);
+  return response;
+}
+
+export async function getCurrentUser(): Promise<AuthUser> {
+  return fetchJson<AuthUser>('/api/v1/auth/me');
+}
+
 async function buildFallbackAnalysis(payload: AnalyzeRequest): Promise<DealRecord> {
   const { getSampleDeals } = await import('@/src/lib/sampleData');
   const sample = getSampleDeals().items[0];
@@ -242,20 +316,22 @@ export function formatVnd(value?: number | null) {
 
 function normalizeDealRecord(payload: BackendAnalyzeLike | BackendDealCard): DealRecord {
   const traceRaw = Array.isArray(payload?.trace) ? payload.trace : [];
-  const trace = traceRaw.filter((step): step is string => typeof step === 'string');
+  const trace = traceRaw.filter((step): step is string => typeof step === "string");
   const verdict = parseVerdict(payload.deal?.verdict ?? payload.verdict);
-  const productName = payload.item?.product_name ?? payload.product_name ?? 'Unknown listing';
+  const cache = parseCache(payload.cache);
+  const productName = payload.item?.product_name ?? payload.product_name ?? "Unknown listing";
   const askingPrice = pickNumber(payload.item?.asking_price ?? payload.asking_price);
   const marketPrice = pickNumber(payload.deal?.market_price ?? payload.market_price);
   const discountPct = pickNumber(payload.deal?.discount_pct ?? payload.discount_pct, true);
-  const rawPost = typeof payload.raw_post === 'string'
+  const rawPost = typeof payload.raw_post === "string"
     ? payload.raw_post
-    : typeof payload.raw_text === 'string'
+    : typeof payload.raw_text === "string"
       ? payload.raw_text
       : undefined;
 
   return {
-    id: typeof payload.id === 'string' ? payload.id : `deal-${Date.now()}`,
+    id: typeof payload.id === "string" ? payload.id : `deal-${Date.now()}`,
+    cache,
     item: {
       product_name: productName,
       brand: payload.item?.brand ?? undefined,
@@ -279,6 +355,13 @@ function normalizeDealRecord(payload: BackendAnalyzeLike | BackendDealCard): Dea
     freshness: payload.freshness || toFreshnessIso(payload.freshness_seconds),
     // processing_ms is intentionally not part of the public mobile type.
   };
+}
+
+function parseCache(value: unknown): DealRecord["cache"] {
+  if (value === "redis_hit" || value === "semantic_hit" || value === "miss") {
+    return value;
+  }
+  return "miss";
 }
 
 function parseVerdict(value: unknown): DealVerdict {

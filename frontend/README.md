@@ -1,121 +1,80 @@
 # Deal Radar Frontend
 
-Next.js frontend scaffold for Deal Radar, a cache-first deal intelligence demo for noisy Vietnamese resale posts.
+Next.js App Router frontend for Deal Radar.
 
 ## Purpose
 
-The web UI should prove the engineering pipeline:
+- Analyze noisy resale posts through chat or demo flow.
+- Browse deal feed with caching state and verdict badges.
+- Inspect deal detail with normalized item + market compare + trace.
+- Authenticate users via JWT and persist local token.
+- Reuse the same backend contract as mobile.
 
-- Analyze noisy social-commerce text.
-- Show normalized product data.
-- Compare asking price against market price.
-- Display verdict, discount math, cache source, and freshness.
-- Demonstrate exact Redis hits and semantic ChromaDB hits.
+## Tech Stack
 
-This frontend is not a generic marketplace app. V1 excludes auth, checkout, seller chat, and live Facebook scraping.
-
-## Current Location
-
-This folder currently contains the initial Next.js scaffold. Repository plans require final application code to live at:
-
-```txt
-frontend/
-```
-
-Use this scaffold as starter material or move/regenerate it into the required final location during implementation.
-
-## Stack
-
-- Next.js App Router
+- Next.js 16 App Router
 - React 19
 - TypeScript
-- Tailwind CSS v4
-- Geist fonts through `next/font`
+- Tailwind v4 + custom CSS
 
-## Planned Screens
+## Backend Link
 
-- `/` - deal feed dashboard with verdict filter, cache badges, freshness, and discount math.
-- `/demo` - analyze console with raw post input, sample buttons, pipeline trace, and result panel.
-- `/deals/[id]` - deal detail with raw post, normalized JSON, market comparison, cache path, and trace.
+The frontend uses base URL from env:
 
-## Backend Contract
+- `API_BASE_URL`
+- `NEXT_PUBLIC_API_BASE_URL`
 
-Expected backend base path:
+Default is `http://localhost:18000`.
 
-```txt
-/api/v1
-```
+Backend endpoints consumed:
 
-Expected endpoints:
+- `GET /api/v1/health`
+- `GET /api/v1/deals`
+- `GET /api/v1/deals/{id}`
+- `POST /api/v1/deals/analyze`
+- `GET /api/v1/cache/metrics`
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
+- `GET /api/v1/auth/me`
 
-- `GET /deals`
-- `GET /deals/{id}`
-- `POST /analyze`
-- `GET /metrics/cache`
-- `GET /health`
+## Auth Pages
 
-Expected cache states:
+Pages:
 
-- `miss`
-- `redis_hit`
-- `semantic_hit`
+- `/auth/login`
+- `/auth/register`
 
-Expected verdicts:
+Flow:
 
-- `HOT_DEAL`
-- `OK_DEAL`
-- `IGNORE`
+- Submit email + password.
+- Backend returns `{ access_token, token_type, user }`.
+- Token is stored in browser `localStorage` key `deal-radar-access-token`.
 
 ## Environment
 
-```env
-API_BASE_URL=http://api:8000
+Create `.env.local` if needed:
+
+```bash
 NEXT_PUBLIC_API_BASE_URL=http://localhost:18000
 ```
 
-## Development
-
-Install dependencies:
+## Commands
 
 ```bash
 npm install
-```
-
-Run dev server:
-
-```bash
 npm run dev
-```
-
-Default local URL:
-
-```txt
-http://localhost:3000
-```
-
-Docker target from root plan:
-
-```txt
-http://localhost:13000
-```
-
-## Verification
-
-```bash
 npm run lint
 npm run build
 ```
 
-Planned browser checks:
+## Runtime URLs
 
-- First analyze returns `miss`.
-- Same post returns `redis_hit`.
-- Paraphrased post returns `semantic_hit`.
-- Feed updates after analyze.
-- Metrics panel shows cache savings.
+- `http://localhost:3000` (frontend app)
+- Backend local default: `http://localhost:18000`
 
-## Notes
+## Verification Checklist
 
-- `COMPLETE_PLAN.md` is the source of truth.
-- `PLAN.md` in this folder contains the frontend implementation plan.
-- Next.js 16 requires `revalidateTag("deals", "max")` instead of the old one-argument form.
+- Open `/` and run analysis from `/chat` or `/demo`.
+- Revisit with same post should show `redis_hit`.
+- Paraphrased post should show `semantic_hit`.
+- Auth pages load and token saves after login/register.

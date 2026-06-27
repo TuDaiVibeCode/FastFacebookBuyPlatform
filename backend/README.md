@@ -7,7 +7,8 @@ Deal Radar backend is a cache-first REST API for noisy resale posts. It extracts
 ## Local Stack
 
 ```bash
-rtk docker compose -f backend/infra/docker/docker-compose.yml up --build
+cd backend/infra/docker
+docker compose --env-file ../.env up --build
 ```
 
 Local URLs:
@@ -50,12 +51,25 @@ Copy `backend/.env.example` to `backend/.env` for local overrides. The Compose f
 
 To use the real OpenAI normalizer, set `USE_MOCK_LLM=false` and put `OPENAI_API_KEY` in `backend/.env`. The Compose file loads that file even when you run `docker compose up` from `backend/infra/docker`.
 
+If `.env` is missing at `backend/.env`, copy from example:
+
+```bash
+cp backend/.env.example backend/.env
+```
+
+Start backend stack using root scripts:
+
+```bash
+cd backend/infra/docker
+docker compose --env-file ../.env up --build
+```
+
 ## Demo Verification
 
 After the API is running:
 
 ```bash
-rtk python backend/scripts/demo_backend.py --base-url http://localhost:18000
+python backend/scripts/demo_backend.py --base-url http://localhost:18000
 ```
 
 The script posts a fresh sample, repeats it for an exact cache hit, posts a paraphrase for a semantic hit, and then reads cache metrics.

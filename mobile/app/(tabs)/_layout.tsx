@@ -42,6 +42,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <MaterialIcons size={26} name="storefront" color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="auth"
+        options={{
+          title: 'Auth',
+          tabBarIcon: ({ color }) => <MaterialIcons size={26} name="person" color={color} />,
+        }}
+      />
     </Tabs>
   );
 }

@@ -4,3 +4,7 @@
 **/.env
 **/.env.*
 !**/.env.example
+landing/.next/
+landing/node_modules/
+landing/next-env.d.ts
+landing/dist/

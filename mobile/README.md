@@ -1,20 +1,42 @@
 # Deal Radar Mobile
 
-Expo 54 / React Native companion app for Deal Radar. Mobile proves ChatGPT-like deal chat, product browsing, multi-client cache behavior, deal detail, verdict filters, cache badges, offline stale state, and pull-to-refresh.
+Expo 54 / React Native companion app for Deal Radar.
+
+## Purpose
+
+- Chat-based deal analysis powered by `/api/v1/deals/analyze`.
+- Browse deal feed and view details with cache source + verdict.
+- Register/login via JWT and reuse token for protected backend calls.
 
 ## Environment
 
-Create `.env` for simulator/local API access:
+Create `mobile/.env`:
 
 ```bash
 EXPO_PUBLIC_API_BASE_URL=http://localhost:18000
+EXPO_PUBLIC_AUTH_TOKEN_KEY=deal-radar-auth-token
+EXPO_PUBLIC_USE_SAMPLE_FALLBACK=1
 ```
 
-For Android emulator, use host bridge if `localhost` cannot reach API:
+Android emulator bridge if needed:
 
 ```bash
 EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:18000
 ```
+
+## Backend Link
+
+Mobile consumes:
+
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
+- `GET /api/v1/auth/me`
+- `GET /api/v1/health`
+- `GET /api/v1/deals`
+- `GET /api/v1/deals/{id}`
+- `POST /api/v1/deals/analyze`
+
+After a successful auth flow, token from response is saved as `EXPO_PUBLIC_AUTH_TOKEN_KEY` and automatically sent as `Authorization: Bearer <token>` on requests.
 
 ## Commands
 
@@ -28,38 +50,8 @@ npm run android
 npm run web
 ```
 
-## API Contract
+## Verification
 
-Mobile consumes:
-
-- `GET /api/v1/deals?verdict=&q=&limit=&cursor=`
-- `GET /api/v1/deals/{id}`
-- `GET /api/v1/health`
-
-Cache values: `miss`, `redis_hit`, `semantic_hit`.
-
-Verdicts: `HOT_DEAL`, `OK_DEAL`, `IGNORE`.
-
-## Cache Behavior
-
-- Feed stale time: 30 seconds.
-- Detail stale time: 5 minutes.
-- Persisted cache max age: 24 hours via AsyncStorage.
-- Pull-to-refresh forces refetch.
-- Offline feed shows stale cached deals with visible banner.
-
-## Screens
-
-- `Chat` tab: ChatGPT-style assistant, prompt chips, bottom composer, product result previews, detail links.
-- `Browse` tab: product feed, search, verdict chips, cache badges, freshness labels, cursor load more.
-- `deals/[id]`: raw post, normalized item, market math, cache source, trace.
-
-## Demo Fallback
-
-The app calls API endpoints first. If API is unavailable, sample fallback data keeps chat, browse, detail, and health behavior working for demo use.
-
-Disable fallback when testing strict backend behavior:
-
-```bash
-EXPO_PUBLIC_USE_SAMPLE_FALLBACK=0
-```
+1. Open `/auth` tab and register/login.
+2. Ensure token is persisted locally.
+3. Use chat and browse screens and confirm API calls are made through auth-aware headers.

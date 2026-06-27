@@ -13,6 +13,7 @@ import {
 import { CacheBadge } from "@/components/cache-badge";
 import { VerdictBadge } from "@/components/verdict-badge";
 import { samplePosts } from "@/lib/mock-data";
+import { getStoredAuthToken } from "@/lib/api";
 import type { AnalyzeResponse } from "@/lib/types";
 
 export function DemoConsole() {
@@ -33,11 +34,17 @@ export function DemoConsole() {
     setIsAnalyzing(true);
 
     try {
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+      const token = getStoredAuthToken();
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
       const response = await fetch("/api/analyze", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({ text, source: "sample" }),
       });
 

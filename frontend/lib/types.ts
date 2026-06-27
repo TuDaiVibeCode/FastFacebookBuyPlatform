@@ -31,6 +31,8 @@ export type DealRecord = {
   freshness?: string;
   trace?: string[];
   processing_ms?: number;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export type AnalyzeRequest = {

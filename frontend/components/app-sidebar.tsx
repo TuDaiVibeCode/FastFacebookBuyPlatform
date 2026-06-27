@@ -8,18 +8,20 @@ import {
   faChevronLeft,
   faChevronRight,
   faComments,
+  faUser,
   faShieldHalved,
   faStore,
 } from "@fortawesome/free-solid-svg-icons";
 
 type AppSidebarProps = {
-  active: "browse" | "chat" | "demo";
+  active: "browse" | "chat" | "demo" | "auth";
 };
 
 const links = [
   { href: "/", label: "Browse", key: "browse", icon: faStore },
   { href: "/chat", label: "Chat", key: "chat", icon: faComments },
   { href: "/demo", label: "Demo", key: "demo", icon: faChartSimple },
+  { href: "/auth/login", label: "Auth", key: "auth", icon: faUser },
 ] as const;
 
 export function AppSidebar({ active }: AppSidebarProps) {

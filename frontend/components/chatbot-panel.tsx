@@ -22,6 +22,7 @@ import { CacheBadge } from "@/components/cache-badge";
 import { VerdictBadge } from "@/components/verdict-badge";
 import { samplePosts } from "@/lib/mock-data";
 import type { AnalyzeResponse } from "@/lib/types";
+import { getStoredAuthToken } from "@/lib/api";
 
 type ChatMessage = {
   role: "assistant" | "user";
@@ -58,9 +59,15 @@ export function ChatbotPanel() {
     setMessages((current) => [...current, { role: "user", content: prompt }]);
 
     try {
+      const headers: HeadersInit = { "Content-Type": "application/json" };
+      const token = getStoredAuthToken();
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
       const response = await fetch("/api/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ text: prompt, source: "sample" }),
       });
       const data = (await response.json()) as AnalyzeResponse | { error: string };

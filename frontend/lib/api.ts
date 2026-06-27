@@ -18,6 +18,8 @@ export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ??
   "http://localhost:18000";
 
+const AUTH_STORAGE_KEY = "deal-radar-access-token";
+
 type BackendPayload = {
   id?: string;
   cache?: string;
@@ -78,9 +80,80 @@ type BackendHealth = {
 };
 
 type FetchOptions = {
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   revalidate?: number;
   tags?: string[];
+  auth?: boolean;
+  headers?: Record<string, string>;
+  body?: string;
 };
+
+export type AuthRequest = {
+  email: string;
+  password: string;
+};
+
+export type AuthTokenResponse = {
+  access_token: string;
+  token_type: string;
+  user: {
+    id: string;
+    email: string;
+    created_at: string;
+  };
+};
+
+export async function registerUser(payload: AuthRequest): Promise<AuthTokenResponse> {
+  const response = await fetchJson<AuthTokenResponse>("/api/v1/auth/register", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  setStoredAuthToken(response.access_token);
+  return response;
+}
+
+export async function loginUser(payload: AuthRequest): Promise<AuthTokenResponse> {
+  const response = await fetchJson<AuthTokenResponse>("/api/v1/auth/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  setStoredAuthToken(response.access_token);
+  return response;
+}
+
+export async function getCurrentUser(): Promise<AuthTokenResponse["user"]> {
+  return fetchJson<AuthTokenResponse["user"]>("/api/v1/auth/me", {
+    auth: true,
+  });
+}
+
+export function getStoredAuthToken(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return window.localStorage.getItem(AUTH_STORAGE_KEY);
+}
+
+export function setStoredAuthToken(token: string | null) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (token) {
+    window.localStorage.setItem(AUTH_STORAGE_KEY, token);
+  } else {
+    window.localStorage.removeItem(AUTH_STORAGE_KEY);
+  }
+}
 
 export async function getDeals(filters?: {
   verdict?: Verdict | "ALL";
@@ -102,6 +175,7 @@ export async function getDeals(filters?: {
   return fetchJson<BackendDealFeedResponse | BackendDealCard[]>(`/api/v1/deals${suffix}`, {
     revalidate: 30,
     tags: [CACHE_TAGS.deals],
+    auth: true,
   })
     .then((data) => {
       const items = Array.isArray(data)
@@ -121,6 +195,7 @@ export async function getDeal(id: string): Promise<DealRecord | null> {
   return fetchJson<BackendAnalyzeLike>(`/api/v1/deals/${id}`, {
     revalidate: 300,
     tags: [CACHE_TAGS.deal(id)],
+    auth: true,
   })
     .then(normalizeDealRecord)
     .catch(() => getMockDeal(id));
@@ -130,6 +205,7 @@ export async function getCacheMetrics(): Promise<CacheMetrics> {
   return fetchJson<CacheMetrics>("/api/v1/cache/metrics", {
     revalidate: 30,
     tags: [CACHE_TAGS.deals],
+    auth: true,
   }).catch(() => getMockMetrics());
 }
 
@@ -137,21 +213,42 @@ export async function getHealth(): Promise<HealthStatus> {
   return fetchJson<BackendHealth>("/api/v1/health", {
     revalidate: 15,
     tags: [CACHE_TAGS.deals],
+    auth: true,
   })
     .then(normalizeHealth)
     .catch(() => mockHealth);
 }
 
-async function fetchJson<T>(path: string, options: FetchOptions): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: {
-      Accept: "application/json",
-    },
-    next: {
+async function fetchJson<T>(path: string, options: FetchOptions = {}): Promise<T> {
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+  };
+
+  if (options.headers) {
+    Object.assign(headers, options.headers);
+  }
+
+  if (options.auth) {
+    const token = getStoredAuthToken();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+  }
+
+  const requestInit: RequestInit = {
+    method: options.method,
+    body: options.body,
+    headers,
+  };
+
+  if (options.revalidate !== undefined || options.tags !== undefined) {
+    requestInit.next = {
       revalidate: options.revalidate,
       tags: options.tags,
-    },
-  });
+    };
+  };
+
+  const response = await fetch(`${API_BASE_URL}${path}`, requestInit);
 
   if (!response.ok) {
     throw new Error(`Backend request failed: ${response.status}`);
