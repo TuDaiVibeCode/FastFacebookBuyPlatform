@@ -51,7 +51,12 @@ def build_api_router(pipeline: AnalyzePipeline, settings: Settings) -> APIRouter
 
     @router.post("/deals/analyze", response_model=AnalyzeResponse, status_code=201)
     def analyze_deal(request: AnalyzeRequest) -> AnalyzeResponse:
-        return pipeline.analyze(request)
+        try:
+            return pipeline.analyze(request)
+        except ValueError as exc:
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
+        except RuntimeError as exc:
+            raise HTTPException(status_code=502, detail=str(exc)) from exc
 
     @router.get("/deals", response_model=DealFeedResponse)
     def list_deals(

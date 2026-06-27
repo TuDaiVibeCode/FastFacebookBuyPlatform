@@ -108,6 +108,48 @@ class MockNormalizer:
         self._events.publish("PostNormalized", raw_text_hash=raw_text_hash, product_name=item.product_name)
         return item
 
+    def compose_response(
+        self,
+        *,
+        raw_text: str,
+        item: NormalizedItem,
+        market_price: int | None,
+        discount_pct: float | None,
+        verdict: str,
+    ) -> str:
+        product = item.product_name or "sản phẩm"
+        if market_price is None or item.asking_price is None:
+            return f"{product}: chưa đủ dữ liệu về giá thị trường hoặc giá chào bán để đánh giá chính xác."
+        if item.sold_status:
+            return f"{product}: bài này có dấu hiệu đã bán/đã chốt, nên không nên săn theo."
+        if discount_pct is None:
+            return f"{product}: chưa đủ dữ liệu để tính % chênh lệch rõ ràng."
+        if verdict == "HOT_DEAL":
+            return f"{product} đang có mức giá tốt: giảm khoảng {discount_pct:.0f}% so với thị trường. Có thể cân nhắc giao dịch."
+        if verdict == "OK_DEAL":
+            return f"{product} giá gần sát thị trường: giảm khoảng {discount_pct:.0f}%; nên xác nhận nhanh tình trạng."
+        return f"{product} chưa thật sự lợi, mức chênh lệch chưa đủ cao cho quyết định mua ngay."
+
+    def compose_search_reply(
+        self,
+        *,
+        raw_text: str,
+        inferred_product: str | None,
+        raw_text_hash: str | None = None,
+        market_price: int | None = None,
+    ) -> str:
+        _ = (raw_text, raw_text_hash)
+        product = inferred_product or "sản phẩm"
+        if market_price is None:
+            return (
+                f"{product}: hiện chưa có dữ liệu giá tham chiếu trong tập mẫu. "
+                "Bạn có thể dán tin rao cụ thể (giá, tình trạng, phụ kiện) để mình chấm điểm nhanh."
+            )
+        return (
+            f"{product}: có dữ liệu tham chiếu khoảng {market_price:,} VND, "
+            "nhưng cần thêm bài đăng cụ thể để so sánh điểm."
+        )
+
 
 class OpenAINormalizer:
     def __init__(
@@ -119,15 +161,14 @@ class OpenAINormalizer:
         base_url: str,
         timeout_seconds: float,
     ) -> None:
-        if not api_key:
-            raise ValueError("OPENAI_API_KEY is required when USE_MOCK_LLM=false")
-        self._events = events
         self._api_key = api_key
+        self._events = events
         self._model = model
         self._endpoint = f"{base_url.rstrip('/')}/chat/completions"
         self._timeout_seconds = timeout_seconds
 
     def normalize(self, normalized_text: str, raw_text_hash: str) -> NormalizedItem:
+        self._ensure_api_key()
         payload = {
             "model": self._model,
             "temperature": 0,
@@ -152,6 +193,89 @@ class OpenAINormalizer:
         self._events.publish("PostNormalized", raw_text_hash=raw_text_hash, product_name=item.product_name)
         return item
 
+    def compose_response(
+        self,
+        *,
+        raw_text: str,
+        item: NormalizedItem,
+        market_price: int | None,
+        discount_pct: float | None,
+        verdict: str,
+    ) -> str:
+        self._ensure_api_key()
+        payload = {
+            "model": self._model,
+            "temperature": 0.2,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "Bạn là chuyên gia hỗ trợ đánh giá tin rao hàng cũ. "
+                        "Trả lời ngắn gọn 1-2 câu tiếng Việt, tránh markdown."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"Bài đăng: {raw_text}\n"
+                        f"Sản phẩm: {item.product_name or 'không rõ'}\n"
+                        f"Giá chào: {item.asking_price or 0}\n"
+                        f"Giá thị trường: {market_price or 0}\n"
+                        f"Discount: {discount_pct if discount_pct is not None else 'Không xác định'}\n"
+                        f"Verdict: {verdict}\n"
+                        "Hãy nhận xét ngắn gọn nên mua hay không và lưu ý nhanh nhất."
+                    ),
+                },
+            ],
+        }
+        data = self._request(payload)
+        content = data["choices"][0]["message"]["content"]
+        response = str(content).strip()
+        if not response:
+            raise RuntimeError("OpenAI chat response is empty")
+        self._events.publish("LLMReplyGenerated", raw_text_hash=item.raw_text_hash)
+        return response
+
+    def compose_search_reply(
+        self,
+        *,
+        raw_text: str,
+        inferred_product: str | None,
+        raw_text_hash: str,
+        market_price: int | None,
+    ) -> str:
+        self._ensure_api_key()
+        payload = {
+            "model": self._model,
+            "temperature": 0.25,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "Bạn là chuyên gia tư vấn mua bán đồ dùng điện tử cho người mới. "
+                        "Trả lời ngắn gọn 2 câu tiếng Việt, tập trung vào cách chọn đúng sản phẩm "
+                        "và câu hỏi cần xác nhận với người bán; tránh kết luận cứng là nên mua hay không."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"Yêu cầu người dùng: {raw_text}\n"
+                        f"Sản phẩm suy đoán: {inferred_product or 'chưa rõ'}\n"
+                        f"Giá tham chiếu trong dữ liệu hiện tại: {market_price or 'chưa có'}\n"
+                        "Hãy phản hồi như trợ lý thân thiện, có thể đưa checklist và đề xuất bước tiếp theo."
+                    ),
+                },
+            ],
+        }
+        data = self._request(payload)
+        content = data["choices"][0]["message"]["content"]
+        response = str(content).strip()
+        if not response:
+            raise RuntimeError("OpenAI search response is empty")
+        self._events.publish("LLMReplyGenerated", raw_text_hash=raw_text_hash)
+        return response
+
     def _request(self, payload: dict[str, Any]) -> dict[str, Any]:
         body = json.dumps(payload).encode("utf-8")
         request = Request(
@@ -172,6 +296,10 @@ class OpenAINormalizer:
             raise RuntimeError(f"OpenAI normalizer request failed: {exc.code} {detail}") from exc
         except (URLError, TimeoutError) as exc:
             raise RuntimeError(f"OpenAI normalizer request failed: {exc}") from exc
+
+    def _ensure_api_key(self) -> None:
+        if not self._normalize_api_key(self._api_key):
+            raise RuntimeError("OPENAI_API_KEY is required and must be a valid OpenAI key when USE_MOCK_LLM=false")
 
     @staticmethod
     def _to_item(content: str, raw_text_hash: str) -> NormalizedItem:
@@ -196,3 +324,13 @@ class OpenAINormalizer:
             raw_text_hash=raw_text_hash,
         )
 
+    @staticmethod
+    def _normalize_api_key(api_key: str) -> str:
+        cleaned = api_key.strip()
+        if not cleaned or cleaned == "REPLACE_WITH_REAL_OPENAI_KEY":
+            return ""
+        if not cleaned.startswith("sk-") and not cleaned.startswith("sk-proj-"):
+            return ""
+        if len(cleaned) < 20:
+            return ""
+        return cleaned

@@ -8,6 +8,8 @@ services:
     image: ${API_IMAGE:-deal-radar-api:local}
     ports:
       - "${API_HTTP_PORT:-18000}:${API_PORT:-8000}"
+    env_file:
+      - ../.env
     environment:
       API_NAME: ${API_NAME:-Deal Radar API}
       API_VERSION: ${API_VERSION:-0.1.0}
@@ -81,7 +83,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dealradar}
       POSTGRES_DB: ${POSTGRES_DB:-deal_radar}
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER:-dealradar}"]
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER:-dealradar}", "-d", "${POSTGRES_DB:-deal_radar}"]
       interval: 5s
       timeout: 3s
       retries: 20

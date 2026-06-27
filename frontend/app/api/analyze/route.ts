@@ -7,8 +7,8 @@ const API_BASE_URL =
   process.env.API_BASE_URL ??
   process.env.NEXT_PUBLIC_API_BASE_URL ??
   "http://localhost:18000";
-const USE_ANALYZE_MOCK_FALLBACK = ["1", "true", "yes", "on"].includes(
-  (process.env.USE_ANALYZE_MOCK_FALLBACK ?? "").toLowerCase(),
+const ALLOW_ANALYZE_MOCK_FALLBACK = ["1", "true", "yes", "on"].includes(
+  (process.env.ALLOW_ANALYZE_MOCK_FALLBACK ?? "").toLowerCase(),
 );
 
 export async function POST(request: Request) {
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
   try {
     result = await proxyAnalyze(payload, authHeader);
   } catch (error: unknown) {
-    if (USE_ANALYZE_MOCK_FALLBACK) {
+    if (ALLOW_ANALYZE_MOCK_FALLBACK) {
       const fallback = (await import("@/lib/mock-data")).then(({ analyzeWithMockCache }) =>
         analyzeWithMockCache(payload),
       );

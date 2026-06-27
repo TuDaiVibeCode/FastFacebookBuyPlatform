@@ -54,6 +54,7 @@ export const mockDeals: DealRecord[] = [
       verdict: "HOT_DEAL",
     },
     trace: ["redis_miss", "semantic_miss", "mock_llm", "scored", "stored"],
+    assistant_reply: "Samsung Galaxy S23 Ultra đang giảm mạnh 40% so với tham chiếu, phù hợp để cân nhắc chốt nếu bài vẫn còn tốt.",
   },
   {
     id: "deal_02",
@@ -80,6 +81,7 @@ export const mockDeals: DealRecord[] = [
       verdict: "HOT_DEAL",
     },
     trace: ["redis_hit", "returned_cached_response"],
+    assistant_reply: "Sản phẩm tương tự đã có trong bộ nhớ đệm, mức giảm vẫn ở quanh 40% - cơ hội vẫn tích cực.",
   },
   {
     id: "deal_03",
@@ -106,6 +108,7 @@ export const mockDeals: DealRecord[] = [
       verdict: "HOT_DEAL",
     },
     trace: ["redis_miss", "semantic_hit", "recomputed_score", "stored"],
+    assistant_reply: "Bài này khớp gần giống bài đã biết và vẫn cho mức giảm khoảng 40%; nên hỏi thêm phụ kiện trước khi quyết định.",
   },
   {
     id: "deal_04",
@@ -132,6 +135,7 @@ export const mockDeals: DealRecord[] = [
       verdict: "IGNORE",
     },
     trace: ["redis_miss", "semantic_miss", "mock_llm", "scored", "stored"],
+    assistant_reply: "MacBook Air M1 đang giảm ~18% so với tham chiếu, chưa đủ tốt để mua ngay; cần chốt lại tình trạng và phụ kiện.",
   },
 ];
 
@@ -284,6 +288,7 @@ function buildMockAnalyzeResponse(
     },
     deal,
     trace: ["redis_miss", "semantic_miss", "mock_llm", "scored", "stored"],
+    assistant_reply: buildMockAssistantReply(product.productName, askingPrice, product.marketPrice, deal.verdict),
   };
 }
 
@@ -301,6 +306,26 @@ function scoreDeal(askingPrice: number | null, marketPrice: number | null): Deal
     discount_pct: discount,
     verdict,
   };
+}
+
+function buildMockAssistantReply(
+  productName: string,
+  askingPrice: number | null,
+  marketPrice: number | null,
+  verdict: DealScore["verdict"],
+) {
+  if (!askingPrice || !marketPrice) {
+    return `${productName}: thiếu giá chào hoặc giá tham chiếu, chưa đủ dữ liệu để đánh giá.`;
+  }
+
+  const discount = Math.round(((marketPrice - askingPrice) / marketPrice) * 100);
+  if (verdict === "HOT_DEAL") {
+    return `${productName}: cơ hội tốt, giá thấp hơn thị trường ${discount}% - có thể xem xét chốt nhanh.`;
+  }
+  if (verdict === "OK_DEAL") {
+    return `${productName}: giá tạm ổn hơn ${discount}%; nên đối chiếu thêm 1-2 tin khác trước khi mua.`;
+  }
+  return `${productName}: biên lợi nhuận chưa hấp dẫn (khoảng ${discount}%), nên cân nhắc thêm.`;
 }
 
 function inferProductKey(text: string) {

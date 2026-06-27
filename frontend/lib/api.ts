@@ -31,6 +31,7 @@ type BackendPayload = {
   freshness?: string | null;
   freshness_seconds?: number | null;
   processing_ms?: number | null;
+  assistant_reply?: string | null;
   trace?: unknown[];
   item?: {
     product_name?: string | null;
@@ -279,6 +280,7 @@ function normalizeDealRecord(payload: BackendAnalyzeLike | BackendDealCard): Dea
   return {
     id: typeof payload.id === "string" && payload.id.length > 0 ? payload.id : `deal-${Date.now()}`,
     cache,
+    assistant_reply: typeof payload.assistant_reply === "string" ? payload.assistant_reply : undefined,
     item: {
       product_name: productName,
       brand: payload.item?.brand ?? undefined,

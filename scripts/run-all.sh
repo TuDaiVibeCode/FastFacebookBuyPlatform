@@ -117,6 +117,28 @@ wait_for_http() {
   done
 }
 
+is_tcp_open() {
+  local host="$1"
+  local port="$2"
+  "$PYTHON_BIN" - "$host" "$port" <<'PY'
+import socket
+import sys
+
+host = sys.argv[1]
+port = int(sys.argv[2])
+
+s = socket.socket()
+s.settimeout(1.0)
+try:
+    s.connect((host, port))
+except Exception:
+    raise SystemExit(1)
+else:
+    s.close()
+    raise SystemExit(0)
+PY
+}
+
 ensure_frontend_ready() {
   if ! command -v npm >/dev/null 2>&1; then
     echo "npm not found. Skip frontend/mobile."
@@ -171,17 +193,26 @@ ensure_frontend_ready
 if command -v npm >/dev/null 2>&1; then
   echo "Starting frontend and mobile..."
 
-  (
-    cd "$FRONTEND_DIR"
-    npm run dev -- --port "${FRONTEND_PORT:-3000}"
-  ) >"$RUN_LOG_DIR/frontend.log" 2>&1 &
-  FRONTEND_PID=$!
+  if is_tcp_open "127.0.0.1" "${FRONTEND_PORT:-3000}"; then
+    echo "Frontend port ${FRONTEND_PORT:-3000} already in use. Skip starting frontend."
+  else
+    (
+      cd "$FRONTEND_DIR"
+      npm run dev -- --port "${FRONTEND_PORT:-3000}"
+    ) >"$RUN_LOG_DIR/frontend.log" 2>&1 &
+    FRONTEND_PID=$!
+  fi
 
-  (
-    cd "$MOBILE_DIR"
-    npm run start -- --port "${MOBILE_PORT:-8081}"
-  ) >"$RUN_LOG_DIR/mobile.log" 2>&1 &
-  MOBILE_PID=$!
+  if is_tcp_open "127.0.0.1" "${MOBILE_PORT:-8081}"; then
+    echo "Mobile port ${MOBILE_PORT:-8081} already in use. Skip starting mobile."
+  else
+    (
+      cd "$MOBILE_DIR"
+      npm run start -- --port "${MOBILE_PORT:-8081}"
+    ) >"$RUN_LOG_DIR/mobile.log" 2>&1 &
+    MOBILE_PID=$!
+  fi
+
   echo "Frontend: http://localhost:${FRONTEND_PORT:-3000}"
   echo "Mobile logs: $RUN_LOG_DIR/mobile.log"
   echo "Frontend logs: $RUN_LOG_DIR/frontend.log"
@@ -194,4 +225,6 @@ echo "API logs:"
 compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" logs --tail=30 api
 echo "Press Ctrl+C to stop all services."
 
-wait
+while true; do
+  sleep 5
+done

@@ -138,6 +138,11 @@ export function DemoConsole() {
             <h3 className="font-semibold text-zinc-950 dark:text-zinc-50">
               {result.item.product_name}
             </h3>
+            {result.assistant_reply ? (
+              <p className="mt-2 text-sm leading-6 text-zinc-700 dark:text-zinc-300">
+                {result.assistant_reply}
+              </p>
+            ) : null}
             <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
               {formatCurrency(result.item.asking_price)} ask vs{" "}
               {formatCurrency(result.deal.market_price)} market,{" "}

@@ -8,7 +8,7 @@ Deal Radar backend is a cache-first REST API for noisy resale posts. It extracts
 
 ```bash
 cd backend/infra/docker
-docker compose --env-file ../../.env up --build
+docker compose --env-file ../.env up --build
 ```
 
 Local URLs:
@@ -51,7 +51,7 @@ All defaults are non-overlapping and safe on a clean machine.
 
 Copy `backend/.env.example` to `backend/.env` for local overrides. The Compose file already sets the default demo values:
 
-- `USE_MOCK_LLM=true`
+- `USE_MOCK_LLM=false`
 - `LLM_PROVIDER=openai`
 - `OPENAI_API_KEY=`
 - `OPENAI_MODEL=gpt-4.1-mini`
@@ -80,7 +80,7 @@ Start backend stack using root scripts:
 
 ```bash
 cd backend/infra/docker
-docker compose --env-file ../../.env up --build
+docker compose --env-file ../.env up --build
 ```
 
 ## Demo Verification

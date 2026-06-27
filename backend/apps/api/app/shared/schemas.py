@@ -56,6 +56,7 @@ class AnalyzeResponse(BaseModel):
     item: NormalizedItem
     deal: DealScore
     trace: list[str]
+    assistant_reply: str | None = None
     raw_text: str
     source: SourceMetadata
     created_at: datetime

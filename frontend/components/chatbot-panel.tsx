@@ -197,6 +197,25 @@ export function ChatbotPanel() {
 }
 
 function ResultSummary({ result }: { result: AnalyzeResponse }) {
+  const hasPriceContext = result.item.asking_price !== null || result.deal.market_price !== null;
+
+  if (!hasPriceContext) {
+    return (
+      <div className="result-summary">
+        <div className="flex flex-wrap gap-2">
+          <VerdictBadge verdict={result.deal.verdict} />
+          <CacheBadge cache={result.cache} />
+        </div>
+        <dl>
+          <div>
+            <dt>Product</dt>
+            <dd>{result.item.product_name}</dd>
+          </div>
+        </dl>
+      </div>
+    );
+  }
+
   return (
     <div className="result-summary">
       <div className="flex flex-wrap gap-2">
@@ -226,6 +245,10 @@ function ResultSummary({ result }: { result: AnalyzeResponse }) {
 }
 
 function buildReply(result: AnalyzeResponse) {
+  if (result.assistant_reply && result.assistant_reply.trim()) {
+    return result.assistant_reply;
+  }
+
   const discount = result.deal.discount_pct ?? 0;
   const product = result.item.product_name;
 

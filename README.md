@@ -18,7 +18,7 @@ Monorepo for Deal Radar: backend API, web frontend, mobile app, and optional lan
 ```bash
 cp backend/.env.example backend/.env
 cd backend/infra/docker
-docker compose --env-file ../../.env up --build
+docker compose --env-file ../.env up --build
 ```
 
 2. Frontend:

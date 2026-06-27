@@ -26,6 +26,7 @@ export type DealRecord = {
   cache: CacheState;
   item: NormalizedItem;
   deal: DealScore;
+  assistant_reply?: string | null;
   raw_post?: string;
   source?: string;
   freshness?: string;
