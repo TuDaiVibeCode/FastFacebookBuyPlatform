@@ -117,7 +117,7 @@ export type DealFeedParams = {
 };
 
 const DEFAULT_API_BASE_URL = 'http://localhost:18000';
-const USE_SAMPLE_FALLBACK = process.env.EXPO_PUBLIC_USE_SAMPLE_FALLBACK !== '0';
+const USE_SAMPLE_FALLBACK = process.env.EXPO_PUBLIC_USE_SAMPLE_FALLBACK === "1";
 const AUTH_TOKEN_KEY = process.env.EXPO_PUBLIC_AUTH_TOKEN_KEY ?? 'deal-radar-auth-token';
 
 export const API_BASE_URL =

@@ -4,7 +4,7 @@ from fastapi import HTTPException, status
 
 from app.core.config import Settings
 from app.shared.schemas import AuthTokenResponse, LoginRequest, RegisterRequest, User
-from app.modules.auth.repository import UserRepository
+from app.modules.auth.repository import DatabaseUnavailableError, UserRepository
 from app.modules.auth.security import (
     create_access_token,
     decode_access_token,
@@ -21,14 +21,20 @@ class AuthService:
 
     def register(self, payload: RegisterRequest) -> AuthTokenResponse:
         email = payload.email.strip().lower()
-        if self.repository.get_user_by_email(email):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Email already exists",
-            )
-        password_hash = hash_password(payload.password)
         try:
+            if self.repository.get_user_by_email(email):
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Email already exists",
+                )
+            password_hash = hash_password(payload.password)
             record = self.repository.create_user(email, password_hash)
+        except DatabaseUnavailableError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Authentication service is temporarily unavailable",
+            ) from exc
+
         except ValueError as exc:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -38,7 +44,13 @@ class AuthService:
 
     def login(self, payload: LoginRequest) -> AuthTokenResponse:
         email = payload.email.strip().lower()
-        record = self.repository.get_user_by_email(email)
+        try:
+            record = self.repository.get_user_by_email(email)
+        except DatabaseUnavailableError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Authentication service is temporarily unavailable",
+            ) from exc
         if not record or not verify_password(payload.password, record.password_hash):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -49,7 +61,13 @@ class AuthService:
     def get_current_user(self, auth_header: str | None) -> User:
         token = parse_bearer_token(auth_header)
         user_id, email = decode_access_token(token, self.settings)
-        record = self.repository.get_user_by_id(user_id)
+        try:
+            record = self.repository.get_user_by_id(user_id)
+        except DatabaseUnavailableError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Authentication service is temporarily unavailable",
+            ) from exc
         if not record:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

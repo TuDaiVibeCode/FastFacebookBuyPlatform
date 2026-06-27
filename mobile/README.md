@@ -15,7 +15,7 @@ Create `mobile/.env`:
 ```bash
 EXPO_PUBLIC_API_BASE_URL=http://localhost:18000
 EXPO_PUBLIC_AUTH_TOKEN_KEY=deal-radar-auth-token
-EXPO_PUBLIC_USE_SAMPLE_FALLBACK=1
+EXPO_PUBLIC_USE_SAMPLE_FALLBACK=0
 ```
 
 Android emulator bridge if needed:
@@ -42,6 +42,7 @@ After a successful auth flow, token from response is saved as `EXPO_PUBLIC_AUTH_
 
 ```bash
 npm install
+npm run start -- --port ${MOBILE_PORT:-8081}
 npm run lint
 npm run typecheck
 npm run export:web
@@ -55,3 +56,7 @@ npm run web
 1. Open `/auth` tab and register/login.
 2. Ensure token is persisted locally.
 3. Use chat and browse screens and confirm API calls are made through auth-aware headers.
+
+### Local stack port
+
+- Mobile Metro: `http://localhost:${MOBILE_PORT:-8081}` via Expo CLI

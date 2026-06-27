@@ -68,6 +68,10 @@ class Settings:
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60 * 24
     openai_api_key: str | None = None
+    llm_provider: str = "openai"
+    openai_base_url: str = "https://api.openai.com/v1"
+    openai_model: str = "gpt-5.5"
+    openai_timeout_seconds: float = 20.0
 
 
 def get_settings() -> Settings:
@@ -105,4 +109,8 @@ def get_settings() -> Settings:
         jwt_secret_key=os.getenv("JWT_SECRET_KEY", "dev-change-me-now"),
         jwt_algorithm=os.getenv("JWT_ALGORITHM", "HS256"),
         jwt_expire_minutes=_env_int("JWT_EXPIRE_MINUTES", 60 * 24),
+        llm_provider=os.getenv("LLM_PROVIDER", "openai"),
+        openai_base_url=os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
+        openai_model=os.getenv("OPENAI_MODEL", "gpt-5.5"),
+        openai_timeout_seconds=_env_float("OPENAI_TIMEOUT_SECONDS", 20.0),
     )

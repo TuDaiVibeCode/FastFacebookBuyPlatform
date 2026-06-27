@@ -23,8 +23,11 @@ export function AuthForm({ mode }: { mode: AuthFormMode }) {
   async function submit(event: FormEvent) {
     event.preventDefault();
 
-    if (!email || !password || password.length < 6) {
-      setError("Use valid email and password (min 6 chars).");
+    const minPasswordLength = mode === "register" ? 8 : 1;
+    if (!email || !password || password.length < minPasswordLength) {
+      setError(
+        `Use valid email and password (min ${minPasswordLength} chars).`,
+      );
       return;
     }
 
@@ -79,7 +82,7 @@ export function AuthForm({ mode }: { mode: AuthFormMode }) {
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          placeholder="At least 6 chars"
+          placeholder={mode === "register" ? "At least 8 chars" : "Password"}
           required
         />
       </label>

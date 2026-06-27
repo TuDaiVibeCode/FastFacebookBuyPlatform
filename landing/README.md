@@ -20,3 +20,7 @@ Reference environment:
 
 - Public API base for landing: `http://localhost:18000`
 - If deployed, point to gateway/base URL with `/api/v1`.
+
+Landing page runtime default:
+
+- `http://localhost:${LANDING_PORT:-3002}`

@@ -18,7 +18,7 @@ Monorepo for Deal Radar: backend API, web frontend, mobile app, and optional lan
 ```bash
 cp backend/.env.example backend/.env
 cd backend/infra/docker
-docker compose --env-file ../.env up --build
+docker compose --env-file ../../.env up --build
 ```
 
 2. Frontend:
@@ -26,7 +26,7 @@ docker compose --env-file ../.env up --build
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev -- --port ${FRONTEND_PORT:-3000}
 ```
 
 3. Mobile:
@@ -34,7 +34,7 @@ npm run dev
 ```bash
 cd mobile
 npm install
-npm run start -- --port 8081
+npm run start -- --port ${MOBILE_PORT:-8081}
 ```
 
 4. Optional all-in-one start:
@@ -53,7 +53,7 @@ scripts\run-all.bat
 
 Backend base URL:
 
-- `http://localhost:18000`
+- `http://localhost:${API_HTTP_PORT:-18000}`
 
 Auth endpoints:
 
@@ -74,8 +74,11 @@ Data endpoints:
 ## Local verification
 
 1. API health: `http://localhost:18000/api/v1/health`
-2. Login/register on `/auth/login`, `/auth/register` in frontend and `/auth` tab in mobile.
-3. Analyze or browse listings and confirm backend returns `cache`, `deal`, and `trace` fields.
+2. Frontend runtime: `http://localhost:${FRONTEND_PORT:-3000}`
+3. Mobile Metro: `http://localhost:${MOBILE_PORT:-8081}`
+4. Landing page: `http://localhost:${LANDING_PORT:-3002}`
+5. Login/register on `/auth/login`, `/auth/register` in frontend and `/auth` tab in mobile.
+6. Analyze or browse listings and confirm backend returns `cache`, `deal`, and `trace` fields.
 
 ## Notes
 

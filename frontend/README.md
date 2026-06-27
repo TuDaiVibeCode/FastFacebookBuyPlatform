@@ -62,14 +62,14 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:18000
 
 ```bash
 npm install
-npm run dev
+npm run dev -- --port ${FRONTEND_PORT:-3000}
 npm run lint
 npm run build
 ```
 
 ## Runtime URLs
 
-- `http://localhost:3000` (frontend app)
+- `http://localhost:${FRONTEND_PORT:-3000}` (frontend app, default `3000`)
 - Backend local default: `http://localhost:18000`
 
 ## Verification Checklist

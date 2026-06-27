@@ -8,7 +8,7 @@ Deal Radar backend is a cache-first REST API for noisy resale posts. It extracts
 
 ```bash
 cd backend/infra/docker
-docker compose --env-file ../.env up --build
+docker compose --env-file ../../.env up --build
 ```
 
 Local URLs:
@@ -16,6 +16,25 @@ Local URLs:
 - API: `http://localhost:18000`
 - Redis: `localhost:16379`
 - ChromaDB: `http://localhost:18001`
+
+## Port map (no conflict)
+
+- API container:
+  - `API_PORT=8000` (container), `API_HTTP_PORT=18000` (host)
+- Redis container:
+  - `REDIS_HOST_PORT=16379` (host), `6379` (container)
+- Chroma container:
+  - `CHROMA_HOST_PORT=18001` (host), `8000` (container)
+- Postgres container:
+  - `POSTGRES_HOST_PORT=15432` (host), `5432` (container)
+- Mobile (Expo):
+  - `MOBILE_PORT=8081`
+- Frontend:
+  - `FRONTEND_PORT=3000`
+- Landing:
+  - `LANDING_PORT=3002`
+
+All defaults are non-overlapping and safe on a clean machine.
 
 ## REST API
 
@@ -61,7 +80,7 @@ Start backend stack using root scripts:
 
 ```bash
 cd backend/infra/docker
-docker compose --env-file ../.env up --build
+docker compose --env-file ../../.env up --build
 ```
 
 ## Demo Verification

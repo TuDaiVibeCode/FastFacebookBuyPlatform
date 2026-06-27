@@ -19,6 +19,11 @@ if [[ ! -f "$ENV_FILE" && -f "$BACKEND_DIR/.env.example" ]]; then
   cp "$BACKEND_DIR/.env.example" "$ENV_FILE"
 fi
 
+if [[ -f "$ENV_FILE" ]]; then
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"
+fi
+
 cleanup() {
   echo "Shutting down local services..."
   if [[ -n "${FRONTEND_PID}" ]]; then
@@ -41,13 +46,13 @@ COMPOSE_PID=$!
 
 echo "Waiting for backend health endpoint..."
 for attempt in $(seq 1 120); do
-  if curl -fsS "http://localhost:18000/api/v1/health" >/dev/null; then
+  if curl -fsS "http://localhost:${API_HTTP_PORT:-18000}/api/v1/health" >/dev/null; then
     break
   fi
   sleep 1
 done
 
-if ! curl -fsS "http://localhost:18000/api/v1/health" >/dev/null; then
+if ! curl -fsS "http://localhost:${API_HTTP_PORT:-18000}/api/v1/health" >/dev/null; then
   echo "Backend did not become healthy. Check $RUN_LOG_DIR/backend.log"
   exit 1
 fi
@@ -56,18 +61,18 @@ echo "Starting frontend and mobile..."
 
 (
   cd "$FRONTEND_DIR"
-  npm run dev -- --port 3000
+  npm run dev -- --port "${FRONTEND_PORT:-3000}"
 ) >"$RUN_LOG_DIR/frontend.log" 2>&1 &
 FRONTEND_PID=$!
 
 (
   cd "$MOBILE_DIR"
-  npm run start -- --port 8081
+  npm run start -- --port "${MOBILE_PORT:-8081}"
 ) >"$RUN_LOG_DIR/mobile.log" 2>&1 &
 MOBILE_PID=$!
 
-echo "Frontend: http://localhost:3000"
-echo "Backend:  http://localhost:18000"
+echo "Frontend: http://localhost:${FRONTEND_PORT:-3000}"
+echo "Backend:  http://localhost:${API_HTTP_PORT:-18000}"
 echo "Mobile logs: $RUN_LOG_DIR/mobile.log"
 echo "Frontend logs: $RUN_LOG_DIR/frontend.log"
 echo "Backend logs: $RUN_LOG_DIR/backend.log"

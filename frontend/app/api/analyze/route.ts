@@ -1,13 +1,15 @@
 import { revalidateTag } from "next/cache";
 
 import { CACHE_TAGS } from "@/lib/cache-tags";
-import { analyzeWithMockCache } from "@/lib/mock-data";
 import type { AnalyzeRequest, AnalyzeResponse } from "@/lib/types";
 
 const API_BASE_URL =
   process.env.API_BASE_URL ??
   process.env.NEXT_PUBLIC_API_BASE_URL ??
   "http://localhost:18000";
+const USE_ANALYZE_MOCK_FALLBACK = ["1", "true", "yes", "on"].includes(
+  (process.env.USE_ANALYZE_MOCK_FALLBACK ?? "").toLowerCase(),
+);
 
 export async function POST(request: Request) {
   let payload: AnalyzeRequest;
@@ -23,7 +25,27 @@ export async function POST(request: Request) {
     return Response.json({ error: "Post text is required" }, { status: 400 });
   }
 
-  const result = await proxyAnalyze(payload, authHeader).catch(() => analyzeWithMockCache(payload));
+  let result: AnalyzeResponse;
+  try {
+    result = await proxyAnalyze(payload, authHeader);
+  } catch (error: unknown) {
+    if (USE_ANALYZE_MOCK_FALLBACK) {
+      const fallback = (await import("@/lib/mock-data")).then(({ analyzeWithMockCache }) =>
+        analyzeWithMockCache(payload),
+      );
+      result = await fallback;
+    } else {
+      if (error instanceof Error && "status" in error && typeof error.status === "number") {
+        const status = error.status;
+        const body = (error as Error & { body?: string }).body;
+        const message = body ? String(body).trim() || error.message : error.message;
+        const payload = { error: message || "Backend request failed" };
+        return Response.json(payload, { status });
+      }
+      const message = error instanceof Error ? error.message : "Backend unavailable";
+      return Response.json({ error: message }, { status: 502 });
+    }
+  }
 
   revalidateTag(CACHE_TAGS.deals, "max");
   if (result.id) {
@@ -53,7 +75,11 @@ async function proxyAnalyze(
   });
 
   if (!response.ok) {
-    throw new Error(`Analyze failed: ${response.status}`);
+    const body = await response.text();
+    const error = new Error(`Analyze failed: ${response.status}`);
+    (error as Error & { status?: number; body?: string }).status = response.status;
+    (error as Error & { status?: number; body?: string }).body = body || response.statusText;
+    throw error;
   }
 
   return response.json() as Promise<AnalyzeResponse>;

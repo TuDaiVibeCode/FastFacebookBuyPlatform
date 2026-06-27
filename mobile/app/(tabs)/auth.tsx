@@ -21,8 +21,11 @@ export default function AuthScreen() {
 
   async function submit() {
     const trimmed = email.trim();
-    if (!trimmed || password.length < 6) {
-      setError('Use valid email and a password with at least 6 chars.');
+    const minPasswordLength = mode === 'register' ? 8 : 1;
+    if (!trimmed || password.length < minPasswordLength) {
+      setError(
+        `Use valid email and a password with at least ${minPasswordLength} chars.`
+      );
       return;
     }
 
@@ -63,7 +66,7 @@ export default function AuthScreen() {
           <TextInput
             autoCapitalize="none"
             autoComplete="password"
-            placeholder="Password (min 6)"
+            placeholder="Password"
             placeholderTextColor="#64748B"
             secureTextEntry
             style={styles.input}
