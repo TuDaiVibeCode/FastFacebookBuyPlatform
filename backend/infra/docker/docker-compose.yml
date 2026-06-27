@@ -9,7 +9,7 @@ services:
     ports:
       - "${API_HTTP_PORT:-18000}:${API_PORT:-8000}"
     env_file:
-      - ../.env
+      - ../../.env
     environment:
       API_NAME: ${API_NAME:-Deal Radar API}
       API_VERSION: ${API_VERSION:-0.1.0}
