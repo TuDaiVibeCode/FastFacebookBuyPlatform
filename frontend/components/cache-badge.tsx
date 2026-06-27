@@ -14,9 +14,9 @@ const cacheStyles: Record<CacheState, string> = {
 };
 
 const cacheLabels: Record<CacheState, string> = {
-  miss: "Cache miss",
-  redis_hit: "Redis hit",
-  semantic_hit: "Semantic hit",
+  miss: "New check",
+  redis_hit: "Quick match",
+  semantic_hit: "Smart match",
 };
 
 const cacheIcons: Record<CacheState, typeof faBoltLightning> = {

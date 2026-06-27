@@ -23,6 +23,9 @@ Local URLs:
 - `GET /api/v1/deals`
 - `GET /api/v1/deals/{deal_id}`
 - `GET /api/v1/cache/metrics`
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
+- `GET /api/v1/auth/me`
 
 ## Environment
 
@@ -36,6 +39,14 @@ Copy `backend/.env.example` to `backend/.env` for local overrides. The Compose f
 - `SEMANTIC_CACHE_THRESHOLD=0.90`
 - `REDIS_URL=redis://redis:6379`
 - `CHROMA_URL=http://chromadb:8000`
+- `DATABASE_URL=postgresql://dealradar:dealradar@postgres:5432/deal_radar`
+- `JWT_SECRET_KEY=dev-change-me-now`
+
+## PostgreSQL + Migrations
+
+- Auth schema migrations live in `backend/apps/api/db/migrations` and Prisma source in
+  `backend/apps/api/prisma/schema.prisma`.
+- API startup runs migrations once before route setup in the container.
 
 To use the real OpenAI normalizer, set `USE_MOCK_LLM=false` and put `OPENAI_API_KEY` in `backend/.env`. The Compose file loads that file even when you run `docker compose up` from `backend/infra/docker`.
 

@@ -1,21 +1,42 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 
 from app.application import AnalyzePipeline
 from app.core.config import Settings
+from app.modules.auth import AuthService, UserRepository
 from app.shared.schemas import (
     AnalyzeRequest,
+    LoginRequest,
     AnalyzeResponse,
     CacheMetrics,
     DealFeedResponse,
+    AuthTokenResponse,
     HealthResponse,
+    RegisterRequest,
+    User,
     Verdict,
 )
 
 
 def build_api_router(pipeline: AnalyzePipeline, settings: Settings) -> APIRouter:
     router = APIRouter(prefix="/api/v1")
+    auth_service = AuthService(UserRepository(settings.database_url), settings)
+
+    @router.post("/auth/register", response_model=AuthTokenResponse, status_code=201)
+    def register(payload: RegisterRequest) -> AuthTokenResponse:
+        return auth_service.register(payload)
+
+    @router.post("/auth/login", response_model=AuthTokenResponse)
+    def login(payload: LoginRequest) -> AuthTokenResponse:
+        return auth_service.login(payload)
+
+    def get_current_user(authorization: str | None = Header(default=None)) -> User:
+        return auth_service.get_current_user(authorization)
+
+    @router.get("/auth/me", response_model=User)
+    def me(current_user: User = Depends(get_current_user)) -> User:
+        return current_user
 
     @router.get("/health", response_model=HealthResponse)
     def health() -> HealthResponse:

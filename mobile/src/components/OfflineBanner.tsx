@@ -9,7 +9,7 @@ export function OfflineBanner({ visible }: { visible: boolean }) {
   return (
     <View style={styles.banner}>
       <MaterialIcons name="cloud-off" size={18} color="#0842A0" />
-      <Text style={styles.text}>Offline. Showing stale cached deals.</Text>
+      <Text style={styles.text}>Offline. Showing latest saved deals.</Text>
     </View>
   );
 }

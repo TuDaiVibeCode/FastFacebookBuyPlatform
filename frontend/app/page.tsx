@@ -10,7 +10,7 @@ import {
 import { AppSidebar } from "@/components/app-sidebar";
 import { CacheBadge } from "@/components/cache-badge";
 import { VerdictBadge } from "@/components/verdict-badge";
-import { getCacheMetrics, getDeals, getHealth } from "@/lib/api";
+import { getCacheMetrics, getDeals } from "@/lib/api";
 import type { DealRecord, Verdict } from "@/lib/types";
 
 const verdicts = new Set(["ALL", "HOT_DEAL", "OK_DEAL", "IGNORE"]);
@@ -25,10 +25,9 @@ export default async function Home({
     ? (rawVerdict as Verdict | "ALL")
     : "ALL";
 
-  const [deals, metrics, health] = await Promise.all([
+  const [deals, metrics] = await Promise.all([
     getDeals({ verdict: activeVerdict, q, limit: 20 }),
     getCacheMetrics(),
-    getHealth(),
   ]);
 
   return (
@@ -38,12 +37,11 @@ export default async function Home({
       <section className="content-shell">
         <section className="market-panel">
           <div className="market-header">
-            <div>
+          <div>
               <p className="market-kicker">Marketplace</p>
               <h1>Browse deals</h1>
               <span>
-                {deals.items.length} listings, {Math.round(metrics.cache_hit_rate * 100)}%
-                cache hit rate, API {health.api}
+                {deals.items.length} listings, {Math.round(metrics.cache_hit_rate * 100)}% checked fast
               </span>
             </div>
             <Link href="/chat" className="market-cta">
@@ -63,9 +61,9 @@ export default async function Home({
 
           <div className="filter-row">
             <FilterLink label="All" value="ALL" active={activeVerdict} />
-            <FilterLink label="Hot deal" value="HOT_DEAL" active={activeVerdict} />
-            <FilterLink label="Ok deal" value="OK_DEAL" active={activeVerdict} />
-            <FilterLink label="Ignore" value="IGNORE" active={activeVerdict} />
+            <FilterLink label="Good deal" value="HOT_DEAL" active={activeVerdict} />
+            <FilterLink label="Fair deal" value="OK_DEAL" active={activeVerdict} />
+            <FilterLink label="Skip" value="IGNORE" active={activeVerdict} />
           </div>
 
           {deals.items.length > 0 ? (
@@ -76,7 +74,7 @@ export default async function Home({
             </div>
           ) : (
             <div className="empty-market">
-              No products match this filter. Paste a post in chat to create one.
+              No listings right now. Add a post in Chat to find more deals.
             </div>
           )}
         </section>

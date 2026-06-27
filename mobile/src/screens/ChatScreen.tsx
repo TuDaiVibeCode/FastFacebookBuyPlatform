@@ -28,9 +28,9 @@ type ChatMessage = {
 };
 
 const PROMPTS = [
-  'Find hot deals',
+  'Find best deals',
   'Best iPhone deal',
-  'Explain cache hits',
+  'How checks work',
   'Show products under 10m',
 ];
 
@@ -38,7 +38,7 @@ const INITIAL_MESSAGES: ChatMessage[] = [
   {
     id: 'welcome',
     role: 'assistant',
-    text: 'Ask me to find hot deals, compare prices, or explain cache behavior. I can browse current products and open detail pages.',
+    text: 'Ask for a resale check, price comparison, or best deal.',
   },
 ];
 
@@ -79,7 +79,7 @@ function buildAssistantReply(input: string, catalog: DealRecord[]): ChatMessage 
     return {
       id: `assistant-${Date.now()}`,
       role: 'assistant',
-      text: 'Product catalog is still loading. Try again in a moment, or open Browse to refresh products.',
+      text: 'Catalog is loading. Pull down on Deals to refresh.',
     };
   }
 
@@ -88,7 +88,7 @@ function buildAssistantReply(input: string, catalog: DealRecord[]): ChatMessage 
       id: `assistant-${Date.now()}`,
       role: 'assistant',
       text:
-        'Deal Radar checks exact Redis cache first, semantic cache second, then LLM only on miss. Product cards show miss, Redis hit, or semantic hit so you can see saved calls.',
+        'We check saved results first, then close matches, then run AI only if needed.',
       productIds: fallbackProductIds,
     };
   }
@@ -103,7 +103,11 @@ function buildAssistantReply(input: string, catalog: DealRecord[]): ChatMessage 
       role: 'assistant',
       text: `${best.item.product_name} is strongest match: ${formatVnd(
         best.item.asking_price
-      )} ask vs ${formatVnd(best.deal.market_price)} market, ${best.deal.discount_pct}% discount, verdict ${best.deal.verdict}.`,
+      )} ask vs ${formatVnd(best.deal.market_price)} market, ${
+        best.deal.discount_pct === null || best.deal.discount_pct === undefined
+          ? 'n/a'
+          : `${best.deal.discount_pct}%`
+      } discount, ${verdictLabel(best.deal.verdict)}.`,
       productIds: matches.map((deal) => deal.id),
     };
   }
@@ -112,9 +116,15 @@ function buildAssistantReply(input: string, catalog: DealRecord[]): ChatMessage 
     id: `assistant-${Date.now()}`,
     role: 'assistant',
     text:
-      'I did not find an exact product match. Try "hot deals", "iPhone", "under 10m", or open Browse for full product list.',
+      'No exact match found. Try "best deals", "iPhone", "under 10m", or open Deals.',
     productIds: fallbackProductIds.slice(0, 2),
   };
+}
+
+function verdictLabel(verdict: DealRecord['deal']['verdict']) {
+  if (verdict === 'HOT_DEAL') return 'good deal';
+  if (verdict === 'OK_DEAL') return 'fair deal';
+  return 'skip';
 }
 
 function ProductPreview({ deal }: { deal: DealRecord }) {
@@ -133,7 +143,11 @@ function ProductPreview({ deal }: { deal: DealRecord }) {
           {deal.item.product_name}
         </Text>
         <Text style={styles.productMeta} numberOfLines={1}>
-          {formatVnd(deal.item.asking_price)} | {deal.deal.discount_pct}% | {deal.deal.verdict}
+          {formatVnd(deal.item.asking_price)} |{' '}
+          {deal.deal.discount_pct === null || deal.deal.discount_pct === undefined
+            ? 'n/a'
+            : `${deal.deal.discount_pct}%`}{' '}
+          | {verdictLabel(deal.deal.verdict)}
         </Text>
       </View>
       <MaterialIcons name="chevron-right" size={20} color="#64748B" />
@@ -265,7 +279,7 @@ export function ChatScreen() {
           <View style={styles.composer}>
             <TextInput
               multiline
-              placeholder="Message Deal Radar"
+              placeholder="Type your message"
               placeholderTextColor="#64748B"
               value={input}
               onChangeText={setInput}

@@ -112,3 +112,24 @@ class ListingBoundary(BaseModel):
     search_text: str
     extra: dict[str, Any] = Field(default_factory=dict)
 
+
+class User(BaseModel):
+    id: str
+    email: str
+    created_at: datetime
+
+
+class RegisterRequest(BaseModel):
+    email: str = Field(min_length=3)
+    password: str = Field(min_length=8)
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str = Field(min_length=1)
+
+
+class AuthTokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: User

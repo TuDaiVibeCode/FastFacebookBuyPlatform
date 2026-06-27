@@ -7,7 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /workspace/backend/apps/api
 
 RUN python -m pip install --upgrade pip && \
-    python -m pip install "fastapi>=0.115.0" "pydantic>=2.7.0" "uvicorn[standard]>=0.30.0"
+    python -m pip install fastapi "uvicorn[standard]" pydantic pydantic-settings redis chromadb httpx python-dotenv psycopg[binary] passlib[bcrypt] "python-jose[cryptography]"
 
 COPY apps/api /workspace/backend/apps/api
 COPY packages/sample-data /workspace/backend/packages/sample-data

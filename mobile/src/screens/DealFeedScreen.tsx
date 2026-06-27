@@ -27,7 +27,7 @@ const FILTERS: FilterValue[] = ['ALL', 'HOT_DEAL', 'OK_DEAL', 'IGNORE'];
 
 function getFreshnessLabel(updatedAt: number) {
   if (!updatedAt) {
-    return 'No cached feed yet';
+    return 'No listings loaded yet';
   }
 
   const ageSeconds = Math.max(0, Math.round((Date.now() - updatedAt) / 1000));
@@ -73,7 +73,7 @@ export function DealFeedScreen() {
       <View style={styles.appBar}>
         <View>
           <Text style={styles.eyebrow}>Deal Radar</Text>
-          <Text style={styles.title}>Browse</Text>
+          <Text style={styles.title}>Deals</Text>
         </View>
         <View style={styles.statusPill}>
           <MaterialIcons name={isOffline ? 'cloud-off' : 'cloud-done'} size={17} color="#0842A0" />
@@ -86,7 +86,7 @@ export function DealFeedScreen() {
       {usesSampleFallback ? (
         <View style={styles.sampleBanner}>
           <MaterialIcons name="science" size={18} color="#1E3A8A" />
-          <Text style={styles.sampleText}>Sample fallback active. Backend calls still run first.</Text>
+          <Text style={styles.sampleText}>Showing sample listings while live data is refreshing.</Text>
         </View>
       ) : null}
 
@@ -128,7 +128,7 @@ export function DealFeedScreen() {
               onPress={() => setVerdict(filter)}
               style={[styles.filterChip, selected && styles.filterChipSelected]}>
               <Text style={[styles.filterText, selected && styles.filterTextSelected]}>
-                {filter === 'ALL' ? 'All' : filter}
+                {filterLabel(filter)}
               </Text>
             </Pressable>
           );
@@ -164,7 +164,7 @@ export function DealFeedScreen() {
               <Text style={styles.centerText}>
                 {dealsQuery.error
                   ? String(dealsQuery.error.message)
-                  : 'Start API and pull to refresh.'}
+                  : 'Pull down to load latest deals.'}
               </Text>
             </View>
           }
@@ -197,6 +197,13 @@ export function DealFeedScreen() {
       )}
     </SafeAreaView>
   );
+}
+
+function filterLabel(filter: FilterValue) {
+  if (filter === 'HOT_DEAL') return 'Good deals';
+  if (filter === 'OK_DEAL') return 'Fair deals';
+  if (filter === 'IGNORE') return 'Skip';
+  return 'All';
 }
 
 const styles = StyleSheet.create({

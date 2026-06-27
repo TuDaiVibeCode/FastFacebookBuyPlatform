@@ -35,27 +35,6 @@ export type DealFeedResponse = {
   next_cursor?: string | null;
 };
 
-export type CacheMetrics = {
-  exact_cache_hits: number;
-  semantic_cache_hits: number;
-  llm_calls_avoided: number;
-  llm_calls_made: number;
-  estimated_cost_saved: number;
-  cache_hit_rate: number;
-};
-
-export type HealthStatus = {
-  api?: string | boolean;
-  redis?: string | boolean;
-  valkey?: string | boolean;
-  chroma?: string | boolean;
-  chromadb?: string | boolean;
-  llm_mode?: string;
-  mock_mode?: boolean;
-  sample_data_loaded?: boolean;
-  [key: string]: string | number | boolean | null | undefined;
-};
-
 export type DealFeedParams = {
   verdict?: DealVerdict | 'ALL';
   q?: string;
@@ -144,34 +123,6 @@ export async function getDeal(id: string): Promise<DealRecord> {
     }
 
     return getSampleDeal(id);
-  }
-}
-
-export async function getCacheMetrics(): Promise<CacheMetrics> {
-  const { sampleMetrics } = await import('@/src/lib/sampleData');
-
-  try {
-    return await fetchJson<CacheMetrics>('/api/v1/cache/metrics');
-  } catch (error) {
-    if (!USE_SAMPLE_FALLBACK) {
-      throw error;
-    }
-
-    return sampleMetrics;
-  }
-}
-
-export async function getHealth(): Promise<HealthStatus> {
-  const { sampleHealth } = await import('@/src/lib/sampleData');
-
-  try {
-    return await fetchJson<HealthStatus>('/api/v1/health');
-  } catch (error) {
-    if (!USE_SAMPLE_FALLBACK) {
-      throw error;
-    }
-
-    return sampleHealth;
   }
 }
 

@@ -5,7 +5,10 @@ description = "FastAPI backend for the Deal Radar demo"
 requires-python = ">=3.11"
 dependencies = [
   "fastapi>=0.115.0",
+  "psycopg[binary]>=3.1.0",
   "pydantic>=2.7.0",
+  "passlib[bcrypt]>=1.7.4",
+  "python-jose[cryptography]>=3.3.0",
   "uvicorn[standard]>=0.30.0",
 ]
 
@@ -18,4 +21,3 @@ test = [
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
-

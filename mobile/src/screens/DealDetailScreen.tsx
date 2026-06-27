@@ -85,7 +85,7 @@ export function DealDetailScreen() {
           <MaterialIcons name="error-outline" size={34} color="#B3261E" />
           <Text style={styles.centerTitle}>Deal unavailable</Text>
           <Text style={styles.centerText}>
-            {dealQuery.error ? String(dealQuery.error.message) : 'Missing deal payload.'}
+            {dealQuery.error ? String(dealQuery.error.message) : 'Deal details are not available right now.'}
           </Text>
         </View>
       ) : (
@@ -101,14 +101,14 @@ export function DealDetailScreen() {
           {isOffline && deal ? (
             <View style={styles.stateBanner}>
               <MaterialIcons name="cloud-off" size={18} color="#0842A0" />
-              <Text style={styles.stateBannerText}>Offline. Showing cached detail.</Text>
+              <Text style={styles.stateBannerText}>Offline. Showing latest saved detail.</Text>
             </View>
           ) : null}
 
           {deal.source === 'sample_fallback' ? (
             <View style={styles.sampleBanner}>
               <MaterialIcons name="science" size={18} color="#1E3A8A" />
-              <Text style={styles.sampleText}>Sample fallback detail. Backend calls still run first.</Text>
+              <Text style={styles.sampleText}>Using sample data while loading live details.</Text>
             </View>
           ) : null}
 
@@ -116,7 +116,7 @@ export function DealDetailScreen() {
             <View style={styles.heroTop}>
               <View style={[styles.verdictPill, { backgroundColor: tone.bg }]}>
                 <MaterialIcons name={tone.icon} size={18} color={tone.fg} />
-                <Text style={[styles.verdictText, { color: tone.fg }]}>{deal.deal.verdict}</Text>
+                <Text style={[styles.verdictText, { color: tone.fg }]}>{verdictLabel(deal.deal.verdict)}</Text>
               </View>
               <CacheBadge cache={deal.cache} />
             </View>
@@ -128,20 +128,20 @@ export function DealDetailScreen() {
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Market math</Text>
+            <Text style={styles.sectionTitle}>Price check</Text>
             <Row label="Asking price" value={formatVnd(deal.item.asking_price)} />
             <Row label="Market price" value={formatVnd(deal.deal.market_price)} />
             <Row label="Discount" value={`${deal.deal.discount_pct}%`} />
             <Row
-              label="Formula"
+              label="Difference"
               value={`${formatVnd(deal.deal.market_price)} - ${formatVnd(deal.item.asking_price)}`}
             />
-            <Row label="Source" value={deal.source ?? 'api'} />
+            <Row label="Data from" value={friendlySource(deal.source)} />
             <Row label="Freshness" value={deal.freshness ?? deal.updated_at ?? 'n/a'} />
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Normalized item</Text>
+            <Text style={styles.sectionTitle}>Product info</Text>
             <Row label="Brand" value={deal.item.brand ?? 'n/a'} />
             <Row label="Model" value={deal.item.model ?? 'n/a'} />
             <Row label="Condition" value={deal.item.condition ?? 'n/a'} />
@@ -157,27 +157,56 @@ export function DealDetailScreen() {
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Raw post</Text>
-            <Text style={styles.rawText}>{deal.raw_post ?? 'Raw source text not included.'}</Text>
+            <Text style={styles.sectionTitle}>Listing text</Text>
+            <Text style={styles.rawText}>{deal.raw_post ?? 'No listing text available.'}</Text>
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Pipeline trace</Text>
+            <Text style={styles.sectionTitle}>How checked</Text>
             {(deal.trace ?? []).length ? (
               deal.trace?.map((step, index) => (
                 <View style={styles.traceRow} key={`${step}-${index}`}>
                   <View style={styles.traceDot} />
-                  <Text style={styles.traceText}>{step}</Text>
+                  <Text style={styles.traceText}>{humanizeTraceStep(step)}</Text>
                 </View>
               ))
             ) : (
-              <Text style={styles.rawText}>Trace not included.</Text>
+              <Text style={styles.rawText}>Check steps not available.</Text>
             )}
           </View>
         </ScrollView>
       )}
-    </SafeAreaView>
+  </SafeAreaView>
   );
+}
+
+function verdictLabel(verdict: keyof typeof VERDICT_TONE) {
+  if (verdict === 'HOT_DEAL') return 'Good deal';
+  if (verdict === 'OK_DEAL') return 'Fair deal';
+  return 'Skip';
+}
+
+function friendlySource(source?: string) {
+  if (source === 'sample_fallback') {
+    return 'Sample data';
+  }
+  return source || 'Live data';
+}
+
+function humanizeTraceStep(step: string) {
+  const map: Record<string, string> = {
+    redis_miss: 'No quick match',
+    semantic_miss: 'No similar saved item',
+    mock_llm: 'Quick AI check',
+    scored: 'Price score calculated',
+    stored: 'Saved for reuse',
+    reused_prior_analysis: 'Used earlier result',
+    redis_hit: 'Used saved result',
+    semantic_hit: 'Used similar item',
+    returned_cached_response: 'Loaded from saved result',
+    recomputed_score: 'Price rechecked',
+  };
+  return map[step] ?? step.replace(/_/g, ' ');
 }
 
 const styles = StyleSheet.create({

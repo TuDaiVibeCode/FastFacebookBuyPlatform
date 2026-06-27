@@ -24,6 +24,14 @@ def _env_float(name: str, default: float) -> float:
     return float(os.getenv(name, str(default)))
 
 
+def _env_csv(name: str, default: tuple[str, ...]) -> tuple[str, ...]:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return tuple(item.strip() for item in value.split(",") if item.strip())
+
+
+
 def _env_path(name: str, default: Path) -> Path:
     value = os.getenv(name)
     if not value:
@@ -40,16 +48,26 @@ class Settings:
     api_version: str = "0.1.0"
     exact_cache_ttl_seconds: int = 60 * 60 * 24
     semantic_cache_threshold: float = 0.90
+    cors_origins: tuple[str, ...] = (
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:3002",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+        "http://127.0.0.1:3002",
+        "http://localhost:8081",
+        "http://127.0.0.1:8081",
+    )
     use_mock_llm: bool = True
-    llm_provider: str = "openai"
     strict_source_policy: bool = False
     sample_data_dir: Path = _backend_root() / "packages" / "sample-data"
     redis_url: str = "redis://redis:6379/0"
     chroma_url: str = "http://chromadb:8000"
+    database_url: str = "postgresql://dealradar:dealradar@postgres:5432/deal_radar"
+    jwt_secret_key: str = "dev-change-me-now"
+    jwt_algorithm: str = "HS256"
+    jwt_expire_minutes: int = 60 * 24
     openai_api_key: str | None = None
-    openai_base_url: str = "https://api.openai.com/v1"
-    openai_model: str = "gpt-5.5"
-    openai_timeout_seconds: float = 20.0
 
 
 def get_settings() -> Settings:
@@ -58,8 +76,20 @@ def get_settings() -> Settings:
         api_version=os.getenv("API_VERSION", "0.1.0"),
         exact_cache_ttl_seconds=_env_int("EXACT_CACHE_TTL_SECONDS", 60 * 60 * 24),
         semantic_cache_threshold=_env_float("SEMANTIC_CACHE_THRESHOLD", 0.90),
+        cors_origins=_env_csv(
+            "CORS_ORIGINS",
+            (
+                "http://localhost:3000",
+                "http://localhost:3001",
+                "http://localhost:3002",
+                "http://127.0.0.1:3000",
+                "http://127.0.0.1:3001",
+                "http://127.0.0.1:3002",
+                "http://localhost:8081",
+                "http://127.0.0.1:8081",
+            ),
+        ),
         use_mock_llm=_env_bool("USE_MOCK_LLM", True),
-        llm_provider=os.getenv("LLM_PROVIDER", "openai").strip().lower(),
         strict_source_policy=_env_bool("STRICT_SOURCE_POLICY", False),
         sample_data_dir=_env_path(
             "SAMPLE_DATA_DIR",
@@ -67,9 +97,12 @@ def get_settings() -> Settings:
         ),
         redis_url=os.getenv("REDIS_URL", "redis://redis:6379/0"),
         chroma_url=os.getenv("CHROMA_URL", "http://chromadb:8000"),
+        database_url=os.getenv(
+            "DATABASE_URL",
+            "postgresql://dealradar:dealradar@postgres:5432/deal_radar",
+        ),
         openai_api_key=os.getenv("OPENAI_API_KEY") or None,
-        openai_base_url=os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1").rstrip("/"),
-        openai_model=os.getenv("OPENAI_MODEL", "gpt-5.5"),
-        openai_timeout_seconds=_env_float("OPENAI_TIMEOUT_SECONDS", 20.0),
+        jwt_secret_key=os.getenv("JWT_SECRET_KEY", "dev-change-me-now"),
+        jwt_algorithm=os.getenv("JWT_ALGORITHM", "HS256"),
+        jwt_expire_minutes=_env_int("JWT_EXPIRE_MINUTES", 60 * 24),
     )
-

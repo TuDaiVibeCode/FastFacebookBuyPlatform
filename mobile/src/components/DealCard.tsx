@@ -18,13 +18,13 @@ export function DealCard({ deal, onPress }: { deal: DealRecord; onPress: () => v
       accessibilityRole="button"
       onPress={onPress}
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}>
-      <View style={styles.topRow}>
-        <View style={[styles.verdict, { backgroundColor: tone.bg }]}>
-          <MaterialIcons name={tone.icon} size={16} color={tone.fg} />
-          <Text style={[styles.verdictText, { color: tone.fg }]}>{deal.deal.verdict}</Text>
+        <View style={styles.topRow}>
+          <View style={[styles.verdict, { backgroundColor: tone.bg }]}>
+            <MaterialIcons name={tone.icon} size={16} color={tone.fg} />
+            <Text style={[styles.verdictText, { color: tone.fg }]}>{verdictLabel(deal.deal.verdict)}</Text>
+          </View>
+          <CacheBadge cache={deal.cache} />
         </View>
-        <CacheBadge cache={deal.cache} />
-      </View>
 
       <Text style={styles.title} numberOfLines={2}>
         {deal.item.product_name}
@@ -49,12 +49,20 @@ export function DealCard({ deal, onPress }: { deal: DealRecord; onPress: () => v
         </View>
       </View>
 
-      <View style={styles.footer}>
-        <Text style={styles.freshness}>{deal.freshness ?? deal.updated_at ?? 'freshness pending'}</Text>
-        <MaterialIcons name="chevron-right" size={22} color="#64748B" />
-      </View>
-    </Pressable>
+        <View style={styles.footer}>
+          <Text style={styles.freshness}>
+            {deal.freshness ?? deal.updated_at ?? 'Update time not available'}
+          </Text>
+          <MaterialIcons name="chevron-right" size={22} color="#64748B" />
+        </View>
+      </Pressable>
   );
+}
+
+function verdictLabel(verdict: keyof typeof VERDICT_TONE) {
+  if (verdict === 'HOT_DEAL') return 'Good deal';
+  if (verdict === 'OK_DEAL') return 'Fair deal';
+  return 'Skip';
 }
 
 const styles = StyleSheet.create({

@@ -4,9 +4,9 @@ import { StyleSheet, Text, View } from 'react-native';
 import { CacheState } from '@/src/lib/api';
 
 const BADGE_COPY: Record<CacheState, { label: string; icon: keyof typeof MaterialIcons.glyphMap }> = {
-  miss: { label: 'LLM miss', icon: 'bolt' },
-  redis_hit: { label: 'Redis hit', icon: 'memory' },
-  semantic_hit: { label: 'Semantic hit', icon: 'hub' },
+  miss: { label: 'New check', icon: 'bolt' },
+  redis_hit: { label: 'Quick match', icon: 'memory' },
+  semantic_hit: { label: 'Smart match', icon: 'hub' },
 };
 
 const BADGE_COLORS: Record<CacheState, { bg: string; fg: string; border: string }> = {

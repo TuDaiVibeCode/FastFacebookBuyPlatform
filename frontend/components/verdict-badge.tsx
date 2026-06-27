@@ -20,12 +20,15 @@ const verdictIcons: Record<Verdict, typeof faFireFlameCurved> = {
 };
 
 export function VerdictBadge({ verdict }: { verdict: Verdict }) {
+  const label =
+    verdict === "HOT_DEAL" ? "Good deal" : verdict === "OK_DEAL" ? "Fair deal" : "Skip";
+
   return (
     <span
       className={`inline-flex h-7 items-center gap-1.5 rounded-md border px-2.5 text-xs font-semibold ${verdictStyles[verdict]}`}
     >
       <FontAwesomeIcon icon={verdictIcons[verdict]} className="h-3 w-3" />
-      {verdict.replace("_", " ")}
+      {label}
     </span>
   );
 }

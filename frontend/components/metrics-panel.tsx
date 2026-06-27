@@ -21,10 +21,10 @@ export function MetricsPanel({
       <div className="min-w-0">
         <h2 className="flex items-center gap-2 text-lg font-semibold text-zinc-950 dark:text-zinc-50">
           <FontAwesomeIcon icon={faPiggyBank} className="h-4 w-4 text-blue-600" />
-          Cache savings
+          Deal activity
         </h2>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Metrics make the engineering depth visible during the demo.
+          These numbers help check how fast the app can reuse earlier work.
         </p>
       </div>
 
@@ -34,23 +34,29 @@ export function MetricsPanel({
           label="Hit rate"
           value={`${Math.round(metrics.cache_hit_rate * 100)}%`}
         />
-        <Metric icon={faDatabase} label="Redis hits" value={String(metrics.exact_cache_hits)} />
+        <Metric icon={faDatabase} label="Saved quick checks" value={String(metrics.exact_cache_hits)} />
         <Metric
           icon={faLayerGroup}
-          label="Semantic hits"
+          label="Smart matches"
           value={String(metrics.semantic_cache_hits)}
         />
-        <Metric icon={faPiggyBank} label="LLM avoided" value={String(metrics.llm_calls_avoided)} />
+        <Metric icon={faPiggyBank} label="AI checks skipped" value={String(metrics.llm_calls_avoided)} />
       </div>
 
       <div className="grid gap-2 rounded-md border border-zinc-200 bg-zinc-50 p-3 text-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <HealthRow label="API" value={health.api} />
-        <HealthRow label="Redis" value={health.redis} />
-        <HealthRow label="ChromaDB" value={health.chromadb} />
-        <HealthRow label="LLM mode" value={health.llm_mode} />
+        <HealthRow label="Service" value={health.api} />
+        <HealthRow label="Cache" value={health.redis} />
+        <HealthRow label="Search index" value={health.chromadb} />
+        <HealthRow label="Mode" value={modeLabel(health.llm_mode)} />
       </div>
     </section>
   );
+}
+
+function modeLabel(mode: string) {
+  if (mode === "real") return "Live";
+  if (mode === "mock") return "Demo";
+  return "Checking";
 }
 
 function Metric({

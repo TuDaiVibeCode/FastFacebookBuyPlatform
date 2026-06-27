@@ -1,9 +1,7 @@
 import type {
-  CacheMetrics,
   DealFeedParams,
   DealFeedResponse,
   DealRecord,
-  HealthStatus,
 } from '@/src/lib/api';
 
 export const sampleDeals: DealRecord[] = [
@@ -27,7 +25,7 @@ export const sampleDeals: DealRecord[] = [
     raw_post: 'Pass ss s23 ultra 9tr, xuoc dam nhe, gia hat de.',
     source: 'sample_fallback',
     updated_at: 'Sample data',
-    freshness: 'Sample fallback',
+    freshness: 'Sample data',
     trace: ['redis_miss', 'semantic_miss', 'mock_llm', 'scored', 'stored'],
   },
   {
@@ -50,7 +48,7 @@ export const sampleDeals: DealRecord[] = [
     raw_post: 'Can ban iPhone 14 Pro 128gb tim, pin 88, may dep, 14tr5.',
     source: 'sample_fallback',
     updated_at: 'Sample data',
-    freshness: 'Redis sample',
+    freshness: 'Fresh check',
     trace: ['redis_hit', 'returned_cached_analysis'],
   },
   {
@@ -73,7 +71,7 @@ export const sampleDeals: DealRecord[] = [
     raw_post: 'Sony xm5 fullbox, it dung, ban nhanh 3tr9.',
     source: 'sample_fallback',
     updated_at: 'Sample data',
-    freshness: 'Semantic sample',
+    freshness: 'Saved match',
     trace: ['redis_miss', 'semantic_hit', 'reused_prior_analysis'],
   },
   {
@@ -96,7 +94,7 @@ export const sampleDeals: DealRecord[] = [
     raw_post: 'Switch OLED may cu, joycon hoi drift nhe, 6tr6.',
     source: 'sample_fallback',
     updated_at: 'Sample data',
-    freshness: 'Sample fallback',
+    freshness: 'Sample data',
     trace: ['redis_miss', 'semantic_miss', 'mock_llm', 'scored', 'ignored'],
   },
   {
@@ -119,7 +117,7 @@ export const sampleDeals: DealRecord[] = [
     raw_post: 'Mac air m2 8/256, sac 82 lan, ngoai hinh 97%, 16tr5.',
     source: 'sample_fallback',
     updated_at: 'Sample data',
-    freshness: 'Semantic sample',
+    freshness: 'Smart match',
     trace: ['redis_miss', 'semantic_hit', 'scored'],
   },
   {
@@ -142,28 +140,10 @@ export const sampleDeals: DealRecord[] = [
     raw_post: 'Fuji x100v bac, ngoai hinh dep, fullbox, 25tr.',
     source: 'sample_fallback',
     updated_at: 'Sample data',
-    freshness: 'Redis sample',
+    freshness: 'Quick match',
     trace: ['redis_hit', 'returned_cached_analysis'],
   },
 ];
-
-export const sampleMetrics: CacheMetrics = {
-  exact_cache_hits: 31,
-  semantic_cache_hits: 17,
-  llm_calls_avoided: 48,
-  llm_calls_made: 12,
-  estimated_cost_saved: 1.92,
-  cache_hit_rate: 0.8,
-};
-
-export const sampleHealth: HealthStatus = {
-  api: 'sample_fallback',
-  redis: 'sample_fallback',
-  chromadb: 'sample_fallback',
-  llm_mode: 'mock',
-  mock_mode: true,
-  sample_data_loaded: true,
-};
 
 export function getSampleDeals(params: DealFeedParams = {}): DealFeedResponse {
   const limit = params.limit ?? 25;
