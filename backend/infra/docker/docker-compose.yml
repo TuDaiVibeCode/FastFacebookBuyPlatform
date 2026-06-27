@@ -23,21 +23,6 @@ services:
         condition: service_started
     restart: unless-stopped
 
-  web:
-    build:
-      context: ../../
-      dockerfile: infra/docker/web.Dockerfile
-    image: deal-radar-web:local
-    ports:
-      - "13000:3000"
-    environment:
-      API_BASE_URL: http://api:8000
-      NEXT_PUBLIC_API_BASE_URL: http://localhost:18000
-    depends_on:
-      api:
-        condition: service_started
-    restart: unless-stopped
-
   redis:
     image: redis:7-alpine
     ports:

@@ -629,14 +629,14 @@ Backend unit tests:
 
 Backend API tests:
 
-- `POST /api/v1/analyze` returns `miss` for first request.
+- `POST /api/v1/deals/analyze` returns `miss` for first request.
 - Repeated request returns `redis_hit`.
 - Paraphrased request returns `semantic_hit`.
 - `GET /api/v1/deals` returns feed records.
 - `GET /api/v1/deals/{id}` returns detail.
 - Missing deal id returns 404.
 - `GET /api/v1/health` reports dependency state.
-- `GET /api/v1/metrics/cache` updates after analyze calls.
+- `GET /api/v1/cache/metrics` updates after analyze calls.
 
 Integration tests:
 
@@ -647,9 +647,8 @@ Integration tests:
 
 ## Frontend Integration Notes
 
-The existing `frontend/` directory is a default Next.js scaffold outside the
-target `backend/apps/web/` layout. Do not treat it as final architecture
-without an explicit migration decision.
+The root `frontend/` directory is outside the backend service boundary. Do not
+place UI source under `backend/`.
 
 When frontend work begins:
 
@@ -657,8 +656,8 @@ When frontend work begins:
 - Prefer Next route handlers for analyze proxying and cache invalidation.
 - If the browser calls FastAPI directly, enable CORS for the dev frontend
   origin.
-- Keep shared API types in `backend/packages/contracts/` if generated
-  contracts are added.
+- Keep generated API contracts in `backend/packages/contracts/` if external
+  clients need shared types.
 
 ## Done Criteria
 

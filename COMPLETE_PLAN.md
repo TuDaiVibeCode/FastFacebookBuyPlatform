@@ -297,7 +297,7 @@ Base path:
 /api/v1
 ```
 
-### `POST /analyze`
+### `POST /deals/analyze`
 
 Request:
 
@@ -378,7 +378,7 @@ Returns status for:
 - Mock or real LLM mode.
 - Sample data loaded.
 
-### `GET /metrics/cache`
+### `GET /cache/metrics`
 
 Returns:
 
@@ -717,8 +717,8 @@ backend/scripts/demo_backend.py
 Demo flow:
 
 1. Start Docker stack.
-2. Open web at `http://localhost:13000`.
-3. Analyze fresh noisy Vietnamese post.
+2. Call API health at `http://localhost:18000/api/v1/health`.
+3. Analyze fresh noisy Vietnamese post with `POST /api/v1/deals/analyze`.
 4. Show `miss`.
 5. Analyze same post again.
 6. Show `redis_hit`.

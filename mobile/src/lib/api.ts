@@ -151,7 +151,7 @@ export async function getCacheMetrics(): Promise<CacheMetrics> {
   const { sampleMetrics } = await import('@/src/lib/sampleData');
 
   try {
-    return await fetchJson<CacheMetrics>('/api/v1/metrics/cache');
+    return await fetchJson<CacheMetrics>('/api/v1/cache/metrics');
   } catch (error) {
     if (!USE_SAMPLE_FALLBACK) {
       throw error;

@@ -48,7 +48,7 @@ def wait_for_health(base_url: str, attempts: int, delay: float) -> None:
 def analyze(base_url: str, text: str, source: str) -> dict[str, Any]:
     result = request_json(
         "POST",
-        f"{base_url}/api/v1/analyze",
+        f"{base_url}/api/v1/deals/analyze",
         {"text": text, "source": source},
     )
     if not isinstance(result, dict):
@@ -57,7 +57,7 @@ def analyze(base_url: str, text: str, source: str) -> dict[str, Any]:
 
 
 def metrics(base_url: str) -> Any:
-    return request_json("GET", f"{base_url}/api/v1/metrics/cache")
+    return request_json("GET", f"{base_url}/api/v1/cache/metrics")
 
 
 def cache_value(result: dict[str, Any]) -> str:
@@ -86,7 +86,7 @@ def assert_cache(label: str, result: dict[str, Any], expected: str, strict: bool
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run the Deal Radar backend cache demo.")
     parser.add_argument("--base-url", default="http://localhost:18000", help="Backend base URL.")
-    parser.add_argument("--source", default="sample", help="Source type sent to /api/v1/analyze.")
+    parser.add_argument("--source", default="sample", help="Source type sent to /api/v1/deals/analyze.")
     parser.add_argument("--health-attempts", type=int, default=30, help="Health polling attempts.")
     parser.add_argument("--health-delay", type=float, default=1.0, help="Seconds between health attempts.")
     parser.add_argument("--no-strict", action="store_true", help="Print cache mismatches instead of failing.")

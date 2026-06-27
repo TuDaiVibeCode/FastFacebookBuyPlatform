@@ -56,7 +56,7 @@ export async function getDeal(id: string): Promise<DealRecord | null> {
 }
 
 export async function getCacheMetrics(): Promise<CacheMetrics> {
-  return fetchJson<CacheMetrics>("/api/v1/metrics/cache", {
+  return fetchJson<CacheMetrics>("/api/v1/cache/metrics", {
     revalidate: 30,
     tags: [CACHE_TAGS.deals],
   }).catch(() => getMockMetrics());

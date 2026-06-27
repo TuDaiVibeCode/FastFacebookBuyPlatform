@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 }
 
 async function proxyAnalyze(payload: AnalyzeRequest): Promise<AnalyzeResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/analyze`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/deals/analyze`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

@@ -10,8 +10,8 @@ def make_client() -> TestClient:
 
 
 def analyze(client: TestClient, text: str, source: str = "sample") -> dict:
-    response = client.post("/api/v1/analyze", json={"text": text, "source": source})
-    assert response.status_code == 200, response.text
+    response = client.post("/api/v1/deals/analyze", json={"text": text, "source": source})
+    assert response.status_code == 201, response.text
     return response.json()
 
 
@@ -32,7 +32,7 @@ def test_analyze_miss_then_redis_hit_updates_metrics() -> None:
 
     first = analyze(client, text)
     second = analyze(client, text)
-    metrics = client.get("/api/v1/metrics/cache").json()
+    metrics = client.get("/api/v1/cache/metrics").json()
 
     assert first["cache"] == "miss"
     assert first["deal"]["verdict"] == "HOT_DEAL"

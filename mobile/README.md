@@ -34,7 +34,7 @@ Mobile consumes:
 
 - `GET /api/v1/deals?verdict=&q=&limit=&cursor=`
 - `GET /api/v1/deals/{id}`
-- `GET /api/v1/metrics/cache`
+- `GET /api/v1/cache/metrics`
 - `GET /api/v1/health`
 
 Cache values: `miss`, `redis_hit`, `semantic_hit`.

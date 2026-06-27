@@ -83,7 +83,6 @@ backend/
     docker/
       docker-compose.yml
       api.Dockerfile
-      web.Dockerfile
     redis/
     chroma/
   docs/
@@ -246,7 +245,7 @@ Base path:
 /api/v1
 ```
 
-### POST /analyze
+### POST /deals/analyze
 
 Request:
 
@@ -313,7 +312,7 @@ Returns service status:
 - ChromaDB
 - mock or real LLM mode
 
-### GET /metrics/cache
+### GET /cache/metrics
 
 Returns demo metrics:
 
@@ -491,8 +490,8 @@ backend/scripts/demo_backend.py
 Demo flow:
 
 1. Start Docker stack.
-2. Open web at `http://localhost:13000`.
-3. Analyze fresh post.
+2. Call API health at `http://localhost:18000/api/v1/health`.
+3. Analyze fresh post with `POST /api/v1/deals/analyze`.
 4. Show `miss`.
 5. Analyze same post again.
 6. Show `redis_hit`.

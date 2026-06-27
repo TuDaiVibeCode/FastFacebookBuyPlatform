@@ -2,7 +2,7 @@
 
 ## Summary
 
-Build the Deal Radar web frontend in `backend/apps/web/`, using root planning docs as source of truth. The existing `frontend/` scaffold may be reused as starter material, but the final app location must follow repository guidance.
+Build the Deal Radar web frontend in the root `frontend/` app. The backend service boundary is `backend/` and should not contain UI source.
 
 Design read: engineering-demo dashboard for hackathon judges, with clear cache-pipeline visibility over generic marketplace polish.
 
@@ -12,7 +12,7 @@ Design read: engineering-demo dashboard for hackathon judges, with clear cache-p
 - Build `/` as the deal feed dashboard with verdict filter, cache badges, freshness, and discount math.
 - Build `/demo` as the analyze console with raw Vietnamese post textarea, sample buttons, pipeline trace, and result panel.
 - Build `/deals/[id]` as the detail page with raw post, normalized JSON, market comparison, cache path, and processing trace.
-- Add `POST /api/analyze` route handler to proxy FastAPI `/api/v1/analyze`.
+- Add `POST /api/analyze` route handler to proxy FastAPI `/api/v1/deals/analyze`.
 - After successful analyze, call `revalidateTag("deals", "max")` for Next 16 compatibility.
 - Add `lib/api.ts`, `lib/types.ts`, and `lib/cache-tags.ts` for API access, shared contracts, and cache tags.
 
@@ -34,8 +34,8 @@ Consume these backend endpoints:
 
 - `GET /api/v1/deals?verdict=&q=&limit=&cursor=`
 - `GET /api/v1/deals/{id}`
-- `POST /api/v1/analyze`
-- `GET /api/v1/metrics/cache`
+- `POST /api/v1/deals/analyze`
+- `GET /api/v1/cache/metrics`
 - `GET /api/v1/health`
 
 Render cache states exactly:
@@ -77,4 +77,4 @@ npm run build
 - Backend API follows documented contract.
 - Web is primary demo surface; mobile remains later.
 - No live marketplace scraping in frontend.
-- Current `frontend/` scaffold can be moved or regenerated into `backend/apps/web/` during implementation.
+- Keep frontend source outside `backend/`.

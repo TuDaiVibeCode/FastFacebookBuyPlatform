@@ -4,14 +4,12 @@ Deal Radar is a modular monolith for the hackathon demo. The core path turns noi
 
 ## Local Stack
 
-- Web: Next.js at `http://localhost:13000`.
-- API: FastAPI at `http://localhost:18000`.
+- API: FastAPI REST service at `http://localhost:18000`.
 - Redis: exact cache on host port `16379`.
 - ChromaDB: semantic cache on host port `18001`.
 
 Internal service URLs in Docker:
 
-- `API_BASE_URL=http://api:8000`
 - `REDIS_URL=redis://redis:6379`
 - `CHROMA_URL=http://chromadb:8000`
 
@@ -28,7 +26,7 @@ Internal service URLs in Docker:
 9. On semantic miss, run mock or real normalization.
 10. Compare asking price to market reference data.
 11. Store the response in Redis and normalized metadata in ChromaDB.
-12. Persist a demo deal record for feed/detail views.
+12. Persist a deal record for REST feed/detail resources.
 13. Return item data, verdict, trace, and cache source.
 
 ## Boundaries

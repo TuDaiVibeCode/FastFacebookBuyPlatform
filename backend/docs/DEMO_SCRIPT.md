@@ -12,7 +12,6 @@ rtk docker compose -f backend/infra/docker/docker-compose.yml up --build
 
 Open:
 
-- Web: `http://localhost:13000`
 - API health: `http://localhost:18000/api/v1/health`
 - ChromaDB: `http://localhost:18001`
 

@@ -1,6 +1,6 @@
 # Deal Radar
 
-Deal Radar is a cache-first deal intelligence demo for noisy resale posts. It extracts structured product data, compares asking price to market price, returns a verdict, and shows whether the result came from a miss, exact Redis hit, or semantic ChromaDB hit.
+Deal Radar backend is a cache-first REST API for noisy resale posts. It extracts structured product data, compares asking price to market price, returns a verdict, and shows whether the result came from a miss, exact cache hit, or semantic cache hit.
 
 `COMPLETE_PLAN.md` at the repository root remains the source of truth for scope and module boundaries.
 
@@ -12,10 +12,17 @@ rtk docker compose -f backend/infra/docker/docker-compose.yml up --build
 
 Local URLs:
 
-- Web: `http://localhost:13000`
 - API: `http://localhost:18000`
 - Redis: `localhost:16379`
 - ChromaDB: `http://localhost:18001`
+
+## REST API
+
+- `GET /api/v1/health`
+- `POST /api/v1/deals/analyze`
+- `GET /api/v1/deals`
+- `GET /api/v1/deals/{deal_id}`
+- `GET /api/v1/cache/metrics`
 
 ## Environment
 
@@ -35,7 +42,7 @@ After the API is running:
 rtk python backend/scripts/demo_backend.py --base-url http://localhost:18000
 ```
 
-The script posts a fresh sample, repeats it for an exact Redis hit, posts a paraphrase for a semantic hit, and then reads cache metrics.
+The script posts a fresh sample, repeats it for an exact cache hit, posts a paraphrase for a semantic hit, and then reads cache metrics.
 
 ## Docs
 

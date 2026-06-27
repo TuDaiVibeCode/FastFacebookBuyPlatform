@@ -19,7 +19,7 @@ This frontend is not a generic marketplace app. V1 excludes auth, checkout, sell
 This folder currently contains the initial Next.js scaffold. Repository plans require final application code to live at:
 
 ```txt
-backend/apps/web/
+frontend/
 ```
 
 Use this scaffold as starter material or move/regenerate it into the required final location during implementation.
