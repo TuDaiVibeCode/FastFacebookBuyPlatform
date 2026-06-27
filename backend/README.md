@@ -7,7 +7,7 @@ Deal Radar is a cache-first deal intelligence demo for noisy resale posts. It ex
 ## Local Stack
 
 ```bash
-rtk docker compose -f deal-radar/infra/docker/docker-compose.yml up --build
+rtk docker compose -f backend/infra/docker/docker-compose.yml up --build
 ```
 
 Local URLs:
@@ -19,7 +19,7 @@ Local URLs:
 
 ## Environment
 
-Copy `deal-radar/.env.example` to `deal-radar/.env` for local overrides. The Compose file already sets the default demo values:
+Copy `backend/.env.example` to `backend/.env` for local overrides. The Compose file already sets the default demo values:
 
 - `USE_MOCK_LLM=true`
 - `STRICT_SOURCE_POLICY=false`
@@ -32,17 +32,17 @@ Copy `deal-radar/.env.example` to `deal-radar/.env` for local overrides. The Com
 After the API is running:
 
 ```bash
-rtk python deal-radar/scripts/demo_backend.py --base-url http://localhost:18000
+rtk python backend/scripts/demo_backend.py --base-url http://localhost:18000
 ```
 
 The script posts a fresh sample, repeats it for an exact Redis hit, posts a paraphrase for a semantic hit, and then reads cache metrics.
 
 ## Docs
 
-- `deal-radar/docs/ARCHITECTURE.md`
-- `deal-radar/docs/SOURCE_POLICY.md`
-- `deal-radar/docs/DEMO_SCRIPT.md`
-- `deal-radar/docs/backend-plan.md`
+- `backend/docs/ARCHITECTURE.md`
+- `backend/docs/SOURCE_POLICY.md`
+- `backend/docs/DEMO_SCRIPT.md`
+- `backend/docs/backend-plan.md`
 
 ## Source Policy
 

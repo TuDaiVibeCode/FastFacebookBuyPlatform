@@ -15,7 +15,7 @@ services:
       USE_MOCK_LLM: "true"
       OPENAI_API_KEY: ""
       STRICT_SOURCE_POLICY: "false"
-      SAMPLE_DATA_DIR: /workspace/deal-radar/packages/sample-data
+      SAMPLE_DATA_DIR: /workspace/backend/packages/sample-data
     depends_on:
       redis:
         condition: service_healthy

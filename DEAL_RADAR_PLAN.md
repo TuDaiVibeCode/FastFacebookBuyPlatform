@@ -48,7 +48,7 @@ Success criteria:
 All application code should live under one folder to avoid conflict with other work:
 
 ```txt
-deal-radar/
+backend/
   apps/
     web/
     mobile/
@@ -66,12 +66,12 @@ deal-radar/
   README.md
 ```
 
-This file lives at repo root as planning context. Future generated source should stay inside `deal-radar/`.
+This file lives at repo root as planning context. Future generated source should stay inside `backend/`.
 
 ## Folder Layout
 
 ```txt
-deal-radar/
+backend/
   apps/
     web/                    # Next.js App Router frontend
     mobile/                 # React Native 0.84 app
@@ -417,7 +417,7 @@ Out of scope for v1:
 Docker Compose file:
 
 ```txt
-deal-radar/infra/docker/docker-compose.yml
+backend/infra/docker/docker-compose.yml
 ```
 
 Services:
@@ -449,7 +449,7 @@ OPENAI_API_KEY=
 Run command:
 
 ```bash
-docker compose -f deal-radar/infra/docker/docker-compose.yml up
+docker compose -f backend/infra/docker/docker-compose.yml up
 ```
 
 ## Sample Data
@@ -457,7 +457,7 @@ docker compose -f deal-radar/infra/docker/docker-compose.yml up
 Folder:
 
 ```txt
-deal-radar/packages/sample-data/
+backend/packages/sample-data/
   raw_posts.txt
   market_price.json
 ```
@@ -485,7 +485,7 @@ deal-radar/packages/sample-data/
 Target script:
 
 ```txt
-deal-radar/scripts/demo_backend.py
+backend/scripts/demo_backend.py
 ```
 
 Demo flow:
@@ -564,4 +564,4 @@ Do not start with mobile. Web demo proves system faster.
 - Future event-driven transition happens through event bus adapter.
 - No live Facebook scraping in v1.
 - Mock LLM must exist so demo does not fail from quota or network.
-- All generated implementation files stay inside `deal-radar/`.
+- All generated implementation files stay inside `backend/`.

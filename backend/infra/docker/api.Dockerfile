@@ -4,12 +4,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 
-WORKDIR /workspace/deal-radar/apps/api
+WORKDIR /workspace/backend/apps/api
 
 RUN python -m pip install --upgrade pip && \
     python -m pip install fastapi "uvicorn[standard]" pydantic pydantic-settings redis chromadb httpx python-dotenv
 
-COPY . /workspace/deal-radar
+COPY . /workspace/backend
 
 RUN if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi && \
     if [ -f pyproject.toml ]; then python -m pip install -e .; fi

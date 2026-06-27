@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
-def _deal_radar_root() -> Path:
+def _backend_root() -> Path:
     return Path(__file__).resolve().parents[4]
 
 
@@ -17,7 +17,7 @@ class Settings:
     semantic_cache_threshold: float = float(os.getenv("SEMANTIC_CACHE_THRESHOLD", "0.90"))
     use_mock_llm: bool = os.getenv("USE_MOCK_LLM", "true").lower() != "false"
     strict_source_policy: bool = os.getenv("STRICT_SOURCE_POLICY", "false").lower() == "true"
-    sample_data_dir: Path = _deal_radar_root() / "packages" / "sample-data"
+    sample_data_dir: Path = _backend_root() / "packages" / "sample-data"
 
 
 def get_settings() -> Settings:

@@ -2,7 +2,7 @@
 
 ## Summary
 
-Build the Deal Radar web frontend in `deal-radar/apps/web/`, using root planning docs as source of truth. The existing `frontend/` scaffold may be reused as starter material, but the final app location must follow repository guidance.
+Build the Deal Radar web frontend in `backend/apps/web/`, using root planning docs as source of truth. The existing `frontend/` scaffold may be reused as starter material, but the final app location must follow repository guidance.
 
 Design read: engineering-demo dashboard for hackathon judges, with clear cache-pipeline visibility over generic marketplace polish.
 
@@ -77,4 +77,4 @@ npm run build
 - Backend API follows documented contract.
 - Web is primary demo surface; mobile remains later.
 - No live marketplace scraping in frontend.
-- Current `frontend/` scaffold can be moved or regenerated into `deal-radar/apps/web/` during implementation.
+- Current `frontend/` scaffold can be moved or regenerated into `backend/apps/web/` during implementation.

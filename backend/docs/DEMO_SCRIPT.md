@@ -7,7 +7,7 @@ This is the operator runbook for the hackathon demo.
 From the repository root:
 
 ```bash
-rtk docker compose -f deal-radar/infra/docker/docker-compose.yml up --build
+rtk docker compose -f backend/infra/docker/docker-compose.yml up --build
 ```
 
 Open:
@@ -21,7 +21,7 @@ Open:
 Run:
 
 ```bash
-rtk python deal-radar/scripts/demo_backend.py --base-url http://localhost:18000
+rtk python backend/scripts/demo_backend.py --base-url http://localhost:18000
 ```
 
 Expected progression:
@@ -40,8 +40,8 @@ The UI is the easy part. The hard part is converting unstructured Vietnamese soc
 If the stack already has warm cache data, reset Redis and Chroma volumes before the demo:
 
 ```bash
-rtk docker compose -f deal-radar/infra/docker/docker-compose.yml down -v
-rtk docker compose -f deal-radar/infra/docker/docker-compose.yml up --build
+rtk docker compose -f backend/infra/docker/docker-compose.yml down -v
+rtk docker compose -f backend/infra/docker/docker-compose.yml up --build
 ```
 
 If a real LLM key is unavailable, keep `USE_MOCK_LLM=true`. The demo is designed to work offline from live marketplace and LLM dependencies.

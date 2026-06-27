@@ -4,7 +4,7 @@ Deal Radar V1 is sample-data-first. The demo must not depend on live Facebook sc
 
 ## Approved Source Types
 
-- `sample`: Curated posts stored in `deal-radar/packages/sample-data/`.
+- `sample`: Curated posts stored in `backend/packages/sample-data/`.
 - `manual`: Text pasted by a user for one-off analysis.
 - `approved`: A future integration that has documented permission, rate limits, and retention rules.
 

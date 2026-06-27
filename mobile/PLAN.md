@@ -2,7 +2,7 @@
 
 ## Summary
 
-Build the Deal Radar mobile companion app from the existing Expo scaffold, while keeping the final implementation target aligned with repository docs: `deal-radar/apps/mobile/`.
+Build the Deal Radar mobile companion app from the existing Expo scaffold, while keeping the final implementation target aligned with repository docs: `backend/apps/mobile/`.
 
 Mobile is not the primary hackathon demo. Its job is to prove multi-client cache behavior: feed, detail, verdict filter, cache badge, offline stale state, and pull-to-refresh.
 
@@ -28,7 +28,7 @@ Use `COMPLETE_PLAN.md` as the source of truth. The current `mobile/` scaffold us
 
 ## Implementation Shape
 
-Keep Expo Router unless the project is moved or regenerated into `deal-radar/apps/mobile/`.
+Keep Expo Router unless the project is moved or regenerated into `backend/apps/mobile/`.
 
 Rename tab labels:
 
@@ -146,7 +146,7 @@ Manual verification:
 ## Assumptions
 
 - `COMPLETE_PLAN.md` overrides older docs.
-- `mobile/` is the current scaffold folder; final product code should move or regenerate under `deal-radar/apps/mobile/`.
+- `mobile/` is the current scaffold folder; final product code should move or regenerate under `backend/apps/mobile/`.
 - Backend and web demo are built first; mobile follows after API contract stabilizes.
 - Mobile proves local cache and stale/offline behavior, not full web parity.
 - No live Facebook scraping or marketplace automation in mobile v1.

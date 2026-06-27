@@ -2,7 +2,7 @@
 
 ## Summary
 
-Build the V1 backend as a FastAPI modular monolith under `deal-radar/apps/api/`.
+Build the V1 backend as a FastAPI modular monolith under `backend/apps/api/`.
 The backend is the core hackathon proof: noisy resale post text goes in, and
 structured item data, deal verdict, discount math, cache source, trace, feed
 records, health, and cache metrics come out.
@@ -28,7 +28,7 @@ This plan is based on all text files in the repository:
 `frontend/app/favicon.ico` is binary and was not decoded. The current
 `frontend/` app is still a default Create Next App scaffold with no backend API
 calls to preserve. The repo docs say implementation code and app docs should
-live under `deal-radar/`, so this backend plan lives in `deal-radar/docs/`.
+live under `backend/`, so this backend plan lives in `backend/docs/`.
 
 ## Backend Goals
 
@@ -58,7 +58,7 @@ live under `deal-radar/`, so this backend plan lives in `deal-radar/docs/`.
 ## Target Layout
 
 ```txt
-deal-radar/
+backend/
   apps/
     api/
       app/
@@ -270,7 +270,7 @@ Responsibilities:
 - Allow `sample`, `manual`, and `approved`.
 - Reject unknown sources when `STRICT_SOURCE_POLICY=true`.
 - Add trace warnings for unknown sources when strict mode is false.
-- Document source rules in `deal-radar/docs/SOURCE_POLICY.md`.
+- Document source rules in `backend/docs/SOURCE_POLICY.md`.
 - Emit `SourcePolicyChecked`.
 
 Acceptance criteria:
@@ -348,7 +348,7 @@ Goal: Load and serve reference market prices.
 
 Responsibilities:
 
-- Load `deal-radar/packages/sample-data/market_price.json`.
+- Load `backend/packages/sample-data/market_price.json`.
 - Return market prices by normalized product name.
 - Report sample data readiness in `/health`.
 
@@ -434,7 +434,7 @@ Acceptance criteria:
 
 ## Sample Data
 
-Create `deal-radar/packages/sample-data/raw_posts.txt` with 50 noisy resale
+Create `backend/packages/sample-data/raw_posts.txt` with 50 noisy resale
 posts covering:
 
 - Exact duplicates for exact cache demo.
@@ -444,7 +444,7 @@ posts covering:
 - Slang and abbreviations.
 - Mixed Vietnamese-style and English product names.
 
-Create `deal-radar/packages/sample-data/market_price.json`:
+Create `backend/packages/sample-data/market_price.json`:
 
 ```json
 {
@@ -463,10 +463,10 @@ Goal: Create the runnable FastAPI backend skeleton.
 
 Relevant files:
 
-- `deal-radar/apps/api/app/main.py`
-- `deal-radar/apps/api/app/core/config.py`
-- `deal-radar/apps/api/app/shared/schemas.py`
-- `deal-radar/apps/api/tests/`
+- `backend/apps/api/app/main.py`
+- `backend/apps/api/app/core/config.py`
+- `backend/apps/api/app/shared/schemas.py`
+- `backend/apps/api/tests/`
 
 Proposed approach:
 
@@ -485,8 +485,8 @@ Acceptance criteria:
 Verify:
 
 ```bash
-rtk python -m compileall deal-radar/apps/api/app
-rtk pytest deal-radar/apps/api/tests -q
+rtk python -m compileall backend/apps/api/app
+rtk pytest backend/apps/api/tests -q
 ```
 
 ### Agent 2: Core Analyze Pipeline
@@ -518,7 +518,7 @@ Acceptance criteria:
 Verify:
 
 ```bash
-rtk pytest deal-radar/apps/api/tests -q
+rtk pytest backend/apps/api/tests -q
 ```
 
 ### Agent 3: Exact Cache And Metrics
@@ -546,7 +546,7 @@ Acceptance criteria:
 Verify:
 
 ```bash
-rtk pytest deal-radar/apps/api/tests -q
+rtk pytest backend/apps/api/tests -q
 ```
 
 ### Agent 4: Semantic Cache And Source Policy
@@ -565,7 +565,7 @@ Proposed approach:
 - Store normalized item metadata after misses.
 - Reuse normalized item for semantic hits and recompute score.
 - Add strict and non-strict source policy behavior.
-- Add `deal-radar/docs/SOURCE_POLICY.md`.
+- Add `backend/docs/SOURCE_POLICY.md`.
 
 Acceptance criteria:
 
@@ -576,7 +576,7 @@ Acceptance criteria:
 Verify:
 
 ```bash
-rtk pytest deal-radar/apps/api/tests -q
+rtk pytest backend/apps/api/tests -q
 ```
 
 ### Agent 5: Demo Data, Docker, And Docs
@@ -585,13 +585,13 @@ Goal: Make the backend demo repeatable.
 
 Relevant files:
 
-- `deal-radar/packages/sample-data/raw_posts.txt`
-- `deal-radar/packages/sample-data/market_price.json`
-- `deal-radar/infra/docker/docker-compose.yml`
-- `deal-radar/infra/docker/api.Dockerfile`
-- `deal-radar/scripts/demo_backend.py`
-- `deal-radar/.env.example`
-- `deal-radar/README.md`
+- `backend/packages/sample-data/raw_posts.txt`
+- `backend/packages/sample-data/market_price.json`
+- `backend/infra/docker/docker-compose.yml`
+- `backend/infra/docker/api.Dockerfile`
+- `backend/scripts/demo_backend.py`
+- `backend/.env.example`
+- `backend/README.md`
 
 Proposed approach:
 
@@ -609,8 +609,8 @@ Acceptance criteria:
 Verify:
 
 ```bash
-rtk docker compose -f deal-radar/infra/docker/docker-compose.yml config
-rtk python deal-radar/scripts/demo_backend.py --base-url http://localhost:18000
+rtk docker compose -f backend/infra/docker/docker-compose.yml config
+rtk python backend/scripts/demo_backend.py --base-url http://localhost:18000
 ```
 
 ## Testing Plan
@@ -648,7 +648,7 @@ Integration tests:
 ## Frontend Integration Notes
 
 The existing `frontend/` directory is a default Next.js scaffold outside the
-target `deal-radar/apps/web/` layout. Do not treat it as final architecture
+target `backend/apps/web/` layout. Do not treat it as final architecture
 without an explicit migration decision.
 
 When frontend work begins:
@@ -657,7 +657,7 @@ When frontend work begins:
 - Prefer Next route handlers for analyze proxying and cache invalidation.
 - If the browser calls FastAPI directly, enable CORS for the dev frontend
   origin.
-- Keep shared API types in `deal-radar/packages/contracts/` if generated
+- Keep shared API types in `backend/packages/contracts/` if generated
   contracts are added.
 
 ## Done Criteria
@@ -678,7 +678,7 @@ Backend V1 is done when:
 
 ## Immediate Build Order
 
-1. Scaffold `deal-radar/` and FastAPI app.
+1. Scaffold `backend/` and FastAPI app.
 2. Add schemas and endpoint shell.
 3. Build ingestion, mock normalization, pricing, arbitrage, and deal storage.
 4. Add exact cache and metrics.

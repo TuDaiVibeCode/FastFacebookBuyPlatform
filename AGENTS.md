@@ -8,14 +8,14 @@ Current repository contains planning documents for Deal Radar:
 - `marketplace-deal-platform-plan.md` - high-level marketplace task list.
 - `COMPLETE_PLAN.md` - merged execution plan and current source of truth.
 
-Future application code should stay inside `deal-radar/`:
+Future application code should stay inside `backend/`:
 
-- `deal-radar/apps/api/` for FastAPI backend code and tests.
-- `deal-radar/apps/web/` for Next.js frontend.
-- `deal-radar/apps/mobile/` for React Native app.
-- `deal-radar/packages/sample-data/` for demo posts and market prices.
-- `deal-radar/docs/` for architecture, source policy, and demo docs.
-- `deal-radar/infra/docker/` for Docker Compose and Dockerfiles.
+- `backend/apps/api/` for FastAPI backend code and tests.
+- `backend/apps/web/` for Next.js frontend.
+- `backend/apps/mobile/` for React Native app.
+- `backend/packages/sample-data/` for demo posts and market prices.
+- `backend/docs/` for architecture, source policy, and demo docs.
+- `backend/infra/docker/` for Docker Compose and Dockerfiles.
 
 ## Build, Test, and Development Commands
 
@@ -25,7 +25,7 @@ No runnable app exists yet. Until scaffolding lands, validate docs with lightwei
 - `sed -n '1,120p' COMPLETE_PLAN.md` - review main plan.
 - `git status --short` - inspect pending changes.
 
-Once app code is added, document exact commands in `deal-radar/README.md` and keep this file updated. Expected examples include `docker compose -f deal-radar/infra/docker/docker-compose.yml up`, backend tests from `apps/api/`, and frontend checks from `apps/web/`.
+Once app code is added, document exact commands in `backend/README.md` and keep this file updated. Expected examples include `docker compose -f backend/infra/docker/docker-compose.yml up`, backend tests from `apps/api/`, and frontend checks from `apps/web/`.
 
 ## Coding Style & Naming Conventions
 
@@ -37,9 +37,9 @@ For future code, follow local framework defaults: Python formatting for FastAPI,
 
 Planning changes should be reviewed for consistency against `COMPLETE_PLAN.md`. When implementation begins, add tests beside each app:
 
-- `deal-radar/apps/api/tests/` for backend unit and integration tests.
-- `deal-radar/apps/web/` test files near components or app routes.
-- `deal-radar/apps/mobile/` test files near screens and components.
+- `backend/apps/api/tests/` for backend unit and integration tests.
+- `backend/apps/web/` test files near components or app routes.
+- `backend/apps/mobile/` test files near screens and components.
 
 Cover cache behavior, analyze flow, verdict rules, and demo-critical paths first.
 

@@ -52,10 +52,10 @@ V1 constraint:
 
 ## 3. Repository Layout
 
-All implementation code must live under `deal-radar/`.
+All implementation code must live under `backend/`.
 
 ```txt
-deal-radar/
+backend/
   apps/
     web/
     mobile/
@@ -423,7 +423,7 @@ V1 may keep records in memory or simple JSON persistence if time is tight. Keep 
 
 ## 9. Source Policy
 
-Create `deal-radar/docs/SOURCE_POLICY.md`.
+Create `backend/docs/SOURCE_POLICY.md`.
 
 Must document:
 
@@ -447,7 +447,7 @@ Verification:
 Folder:
 
 ```txt
-deal-radar/packages/sample-data/
+backend/packages/sample-data/
   raw_posts.txt
   market_price.json
 ```
@@ -477,7 +477,7 @@ deal-radar/packages/sample-data/
 File:
 
 ```txt
-deal-radar/infra/docker/docker-compose.yml
+backend/infra/docker/docker-compose.yml
 ```
 
 Services:
@@ -510,7 +510,7 @@ STRICT_SOURCE_POLICY=false
 Run:
 
 ```bash
-docker compose -f deal-radar/infra/docker/docker-compose.yml up
+docker compose -f backend/infra/docker/docker-compose.yml up
 ```
 
 ## 12. Implementation Phases
@@ -519,7 +519,7 @@ docker compose -f deal-radar/infra/docker/docker-compose.yml up
 
 Tasks:
 
-- Create `deal-radar/` layout.
+- Create `backend/` layout.
 - Add root README and `.env.example`.
 - Add docs placeholders.
 - Add sample data folder.
@@ -527,7 +527,7 @@ Tasks:
 Verify:
 
 - Repo remains isolated.
-- No generated app files outside `deal-radar/`.
+- No generated app files outside `backend/`.
 
 ### Phase 1: Backend Core
 
@@ -711,7 +711,7 @@ Post-MVP or final stretch:
 Target script:
 
 ```txt
-deal-radar/scripts/demo_backend.py
+backend/scripts/demo_backend.py
 ```
 
 Demo flow:
@@ -817,7 +817,7 @@ Mitigation:
 
 ## 18. Immediate Next Actions
 
-1. Scaffold `deal-radar/`.
+1. Scaffold `backend/`.
 2. Build FastAPI schemas and mock analyze pipeline.
 3. Add sample posts and market prices.
 4. Add exact cache.
